@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ILT Market Intelligence v3 — Live</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#060a0d;--bg2:#0c1318;--bg3:#101a20;--bg4:#152229;--border:#1a2b35;--border2:#223545;--text:#c0d4de;--text2:#6e8ea0;--text3:#334e5e;--accent:#00e5a0;--amber:#f5a623;--red:#ff3d5a;--blue:#29b6f6;--purple:#b39ddb;--gold:#ffd54f;--silver:#b0bec5;--crude:#ef6c00;--mono:'Space Mono',monospace;--sans:'Syne',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.6;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:999}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1400px;margin:0 auto;padding:0 20px 80px;position:relative;z-index:1}
+
+/* ── HEADER ── */
+header{border-bottom:1px solid var(--border);padding:14px 0 12px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;background:var(--bg);z-index:100}
+.logo{font-family:var(--sans);font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#000;font-weight:700}
+.logo span{color:var(--accent)}
+.header-meta{display:flex;align-items:center;gap:16px;font-size:10px;color:var(--text2)}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);padding:3px 9px;border-radius:20px;color:var(--accent);font-size:10px}
+.live-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,229,160,.5)}60%{opacity:.7;box-shadow:0 0 0 5px transparent}}
+.update-clock{color:var(--text3);font-size:10px}
+
+/* ── LIVE TICKER STRIP ── */
+.ticker-strip{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;height:32px;display:flex;align-items:center;margin-bottom:20px}
+.ticker-inner{display:flex;gap:0;animation:scroll-left 60s linear infinite;white-space:nowrap}
+@keyframes scroll-left{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tick-item{padding:0 24px;border-right:1px solid var(--border);font-size:11px;display:flex;align-items:center;gap:8px;height:32px}
+.tick-name{color:var(--text3);letter-spacing:.06em}
+.tick-val{font-weight:700;color:#fff}
+.tick-chg{font-size:10px}
+
+/* ── NAV ── */
+nav{display:flex;gap:0;margin-bottom:28px;border:1px solid var(--border);border-radius:7px;overflow:hidden;width:fit-content;flex-wrap:wrap}
+.nb{padding:7px 16px;background:none;border:none;color:var(--text2);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:.07em;text-transform:uppercase;border-right:1px solid var(--border);transition:all .18s}
+.nb:last-child{border-right:none}
+.nb:hover{background:var(--bg3);color:var(--text)}
+.nb.active{background:var(--accent);color:#000;font-weight:700}
+
+/* ── ALERT BAR ── */
+.alert{border-left:3px solid var(--amber);background:rgba(245,166,35,.07);padding:10px 14px;border-radius:0 6px 6px 0;margin-bottom:20px;font-size:11px;color:var(--text)}
+.alert strong{color:var(--amber)}
+.alert-red{border-left-color:var(--red);background:rgba(255,61,90,.07)}
+.alert-red strong{color:var(--red)}
+.alert-blue{border-left-color:var(--blue);background:rgba(41,182,246,.07)}
+.alert-blue strong{color:var(--blue)}
+
+/* ── KPI GRID ── */
+.kpi4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.kpi6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:13px 15px;position:relative;overflow:hidden;transition:border-color .3s}
+.kpi.flash{border-color:rgba(0,229,160,.6);transition:none}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.c-green::before{background:var(--accent)}
+.kpi.c-red::before{background:var(--red)}
+.kpi.c-amber::before{background:var(--amber)}
+.kpi.c-blue::before{background:var(--blue)}
+.kpi.c-gold::before{background:var(--gold)}
+.kpi.c-silver::before{background:var(--silver)}
+.kpi.c-crude::before{background:var(--crude)}
+.kl{font-size:9px;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px}
+.kv{font-family:var(--sans);font-weight:700;font-size:22px;color:#fff;line-height:1;transition:color .3s}
+.ks{font-size:10px;margin-top:4px}
+.up{color:var(--accent)}.dn{color:var(--red)}.neu{color:var(--amber)}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.g-wide{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.g-wide2{display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-bottom:14px}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:16px 18px;margin-bottom:14px}
+.ct{font-size:9px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:5px}
+.ct::before{content:'//';color:var(--accent)}
+
+/* ── SECTION ── */
+.sec{display:none}.sec.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.fi{animation:fi .35s ease forwards}
+
+/* ── TABLES ── */
+.dt{width:100%;border-collapse:collapse;font-size:11px}
+.dt th{font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:5px 8px;border-bottom:1px solid var(--border)}
+.dt td{padding:8px 8px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:rgba(255,255,255,.02)}
+
+/* ── BADGES ── */
+.b{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.04em}
+.b-g{background:rgba(0,229,160,.15);color:var(--accent);border:1px solid rgba(0,229,160,.3)}
+.b-r{background:rgba(255,61,90,.15);color:var(--red);border:1px solid rgba(255,61,90,.3)}
+.b-a{background:rgba(245,166,35,.15);color:var(--amber);border:1px solid rgba(245,166,35,.3)}
+.b-b{background:rgba(41,182,246,.15);color:var(--blue);border:1px solid rgba(41,182,246,.3)}
+.b-x{background:rgba(255,255,255,.07);color:var(--text2);border:1px solid var(--border)}
+.b-gold{background:rgba(255,213,79,.15);color:var(--gold);border:1px solid rgba(255,213,79,.3)}
+
+/* ── PROGRESS BARS ── */
+.pr-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11px}
+.pr-label{width:105px;color:var(--text2);flex-shrink:0;font-size:10px}
+.pr-track{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.pr-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.pr-val{width:60px;text-align:right;font-weight:700;font-size:10px}
+
+/* ── METER ── */
+.meter-track{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--red),var(--amber),var(--accent));position:relative;margin-bottom:5px}
+.meter-needle{position:absolute;top:-4px;width:3px;height:16px;background:#fff;border-radius:2px;transform:translateX(-50%);box-shadow:0 0 5px rgba(255,255,255,.5)}
+
+/* ── COMMODITY PRICE BOARD ── */
+.price-board{background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-bottom:14px}
+.pb-header{background:var(--bg3);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.pb-title{font-family:var(--sans);font-weight:700;font-size:15px}
+.pb-body{padding:14px 16px}
+.big-price{font-family:var(--sans);font-weight:800;font-size:40px;line-height:1;transition:color .3s}
+.price-meta{display:flex;gap:16px;margin-top:6px;font-size:11px;flex-wrap:wrap}
+.price-meta span{color:var(--text2)}
+.price-meta strong{color:var(--text)}
+
+/* ── MAP CANVAS ── */
+#vesselMap{width:100%;border-radius:6px;background:var(--bg3);cursor:crosshair;display:block}
+.map-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:10px;color:var(--text2)}
+.ml-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+
+/* ── THREAT SYSTEM ── */
+.threat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.threat-card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:13px;position:relative}
+.threat-level{position:absolute;top:10px;right:10px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px}
+.tl-critical{background:rgba(255,61,90,.2);color:var(--red);border:1px solid rgba(255,61,90,.4)}
+.tl-high{background:rgba(245,166,35,.2);color:var(--amber);border:1px solid rgba(245,166,35,.4)}
+.tl-medium{background:rgba(41,182,246,.2);color:var(--blue);border:1px solid rgba(41,182,246,.4)}
+.tl-low{background:rgba(0,229,160,.2);color:var(--accent);border:1px solid rgba(0,229,160,.4)}
+.threat-icon{font-size:22px;margin-bottom:6px}
+.threat-title{font-family:var(--sans);font-weight:700;font-size:13px;color:#fff;margin-bottom:3px}
+.threat-sub{font-size:10px;color:var(--text2);margin-bottom:8px}
+.threat-impact{font-size:10px;padding:4px 0;border-top:1px solid var(--border);margin-top:6px;color:var(--text)}
+
+/* ── MINE GRID ── */
+.mine-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:11px}
+.mine-row:last-child{border-bottom:none}
+.mine-flag{font-size:16px;width:24px;text-align:center}
+.mine-info{flex:1}
+.mine-name{color:#fff;font-weight:700;font-size:11px}
+.mine-detail{font-size:10px;color:var(--text2)}
+.mine-output{text-align:right;font-size:10px}
+
+/* ── DARK POOL ITEM ── */
+.dp-i{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.dp-i:last-child{border-bottom:none}
+.dp-t{font-family:var(--sans);font-weight:700;color:#fff;width:55px;font-size:12px}
+.dp-b{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.dp-bf{height:100%;border-radius:2px}
+.dp-v{width:75px;text-align:right;font-size:10px;color:var(--text2)}
+
+/* ── PRICE HISTORY CHART ── */
+.ch-wrap{position:relative}
+
+/* ── WHALE CARDS ── */
+.wg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.wc{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:14px}
+.we{font-size:26px;margin-bottom:6px;display:block}
+.wn{font-family:var(--sans);font-weight:700;font-size:14px;color:#fff;margin-bottom:2px}
+.wa{font-size:10px;color:var(--text2);margin-bottom:8px}
+.wp{font-size:10px;display:flex;flex-direction:column;gap:3px}
+.wp span{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)}
+.wp span:last-child{border-bottom:none}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding-top:20px;margin-top:50px;font-size:10px;color:var(--text3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1000px){.kpi4,.kpi6{grid-template-columns:repeat(2,1fr)}.g2,.g3,.g-wide,.g-wide2{grid-template-columns:1fr}.threat-grid,.wg{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.kpi4,.kpi6{grid-template-columns:1fr 1fr}.threat-grid,.wg{grid-template-columns:1fr}}
+
+/* ── WHALE EMULATOR ── */
+.we-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.we-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s}
+.we-card:hover{border-color:var(--border2)}
+.we-card.selected{border-color:var(--accent);box-shadow:0 0 0 1px rgba(0,229,160,.2)}
+.we-head{padding:13px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.we-name{font-family:var(--sans);font-weight:700;font-size:14px;color:#fff}
+.we-style{font-size:9px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.we-body{padding:12px 14px}
+.wr-track{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:6px 0 3px}
+.wr-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.wr-label{display:flex;justify-content:space-between;font-size:9px;color:var(--text3)}
+.we-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}
+.we-stat{background:var(--bg3);padding:7px 8px;border-radius:5px;text-align:center}
+.we-stat-v{font-family:var(--sans);font-weight:700;font-size:14px;color:#fff;line-height:1}
+.we-stat-l{font-size:9px;color:var(--text3);margin-top:2px}
+.copy-btn{width:100%;margin-top:10px;padding:7px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);border-radius:5px;color:var(--accent);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .18s}
+.copy-btn:hover{background:rgba(0,229,160,.2);border-color:var(--accent)}
+.copy-btn.active{background:var(--accent);color:#000;font-weight:700}
+.trade-feed{max-height:340px;overflow-y:auto}
+.tf-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--border);font-size:11px;transition:background .3s}
+.tf-row.new-trade{animation:tradeIn .5s ease}
+@keyframes tradeIn{from{background:rgba(0,229,160,.12)}to{background:transparent}}
+.tf-row.my-copy{background:rgba(0,229,160,.05);border-left:2px solid var(--accent)}
+.tf-time{font-size:9px;color:var(--text3);width:50px;flex-shrink:0;font-family:var(--mono)}
+.tf-whale{width:90px;font-size:10px;font-weight:700;flex-shrink:0}
+.tf-asset{width:55px;font-weight:700;color:#fff;flex-shrink:0}
+.tf-dir{width:40px;flex-shrink:0}
+.tf-entry{width:60px;text-align:right;flex-shrink:0;color:var(--text2);font-size:10px}
+.tf-size{width:60px;text-align:right;flex-shrink:0;color:var(--text2);font-size:10px}
+.tf-pnl{width:65px;text-align:right;font-weight:700;font-size:11px;flex-shrink:0}
+.tf-status{width:55px;text-align:right;flex-shrink:0}
+.tf-copy{flex-shrink:0;margin-left:auto}
+.copy-mini{padding:3px 8px;border:1px solid rgba(0,229,160,.4);background:transparent;border-radius:3px;color:var(--accent);font-size:9px;cursor:pointer;font-family:var(--mono);transition:all .15s}
+.copy-mini:hover{background:rgba(0,229,160,.15)}
+.copy-mini.done{border-color:var(--text3);color:var(--text3);cursor:default}
+.my-pf-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-bottom:1px solid var(--border);font-size:11px}
+.my-pf-row:last-child{border-bottom:none}
+.pf-asset{width:60px;font-family:var(--sans);font-weight:700;color:#fff;font-size:13px}
+.pf-dir{width:40px}
+.pf-entry{width:65px;font-size:10px;color:var(--text2)}
+.pf-current{width:65px;font-size:10px}
+.pf-pnl{width:80px;font-weight:700;font-size:12px;text-align:right}
+.pf-pnlpct{font-size:9px;font-weight:400}
+.pf-whale{flex:1;font-size:9px;color:var(--text3)}
+.pf-close{padding:3px 8px;border:1px solid rgba(255,61,90,.4);background:transparent;border-radius:3px;color:var(--red);font-size:9px;cursor:pointer;font-family:var(--mono)}
+.pf-close:hover{background:rgba(255,61,90,.15)}
+.score-ring{width:70px;height:70px;flex-shrink:0}
+.wr-big{font-family:var(--sans);font-weight:800;font-size:32px;line-height:1}
+.signal-bar{height:4px;border-radius:2px;margin-top:4px;transition:width .6s ease}
+.signal-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:10px}
+.signal-label{width:100px;color:var(--text2);flex-shrink:0;font-size:9px}
+.signal-track{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.signal-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.pnl-counter{font-family:var(--sans);font-weight:800;font-size:28px;transition:color .3s}
+.closed-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:10px;opacity:.75}
+.closed-row:last-child{border-bottom:none}
+.leaderboard-row{display:flex;align-items:center;gap:12px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:11px}
+.leaderboard-row:last-child{border-bottom:none}
+.lb-rank{width:24px;font-family:var(--sans);font-weight:800;font-size:16px;color:var(--text3);flex-shrink:0}
+.lb-rank.gold-rank{color:var(--gold)}
+.lb-rank.silver-rank{color:var(--silver)}
+.lb-rank.bronze-rank{color:var(--crude)}
+.lb-name{flex:1;font-weight:700;color:#fff}
+.lb-wr{width:80px;text-align:center}
+.lb-trades{width:60px;text-align:right;color:var(--text2);font-size:10px}
+.lb-pnl{width:75px;text-align:right;font-weight:700}
+
+/* ── TOOLTIP ── */
+.tip{position:fixed;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;font-size:10px;color:var(--text);pointer-events:none;z-index:200;display:none;max-width:220px;line-height:1.5}
+
+/* ── PRICE FLASH ── */
+@keyframes priceUp{0%,100%{background:transparent}50%{background:rgba(0,229,160,.15)}}
+@keyframes priceDn{0%,100%{background:transparent}50%{background:rgba(255,61,90,.15)}}
+.flash-up{animation:priceUp .6s ease}
+.flash-dn{animation:priceDn .6s ease}
+</style>
+</head>
+<body>
+<div class="tip" id="tooltip"></div>
+
+<div class="wrap">
+<!-- HEADER -->
+<header>
+  <div class="logo"><div class="logo-icon">ILT</div><span>ILT</span>&nbsp;Market Intelligence</div>
+  <div class="header-meta">
+    <div class="live-pill"><div class="live-dot"></div>LIVE FEED</div>
+    <span id="hclock" style="color:var(--text2)">13 Mar 2026</span>
+    <span class="update-clock">Aggiornamento tra <span id="countdown" style="color:var(--accent)">10</span>s</span>
+    <span style="color:var(--text3)">ICI · WhaleStream · OPEC · USGS · MarineTraffic</span>
+  </div>
+</header>
+
+<!-- LIVE TICKER STRIP -->
+<div class="ticker-strip">
+  <div class="ticker-inner" id="tickerInner">
+    <!-- populated by JS -->
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <button class="nb active" onclick="showSec('overview',this)">Overview</button>
+  <button class="nb" onclick="showSec('commodities',this)">🛢 Materie Prime</button>
+  <button class="nb" onclick="showSec('volume',this)">Volume</button>
+  <button class="nb" onclick="showSec('flows',this)">Flussi ETF</button>
+  <button class="nb" onclick="showSec('whales',this)">🐋 Whales</button>
+  <button class="nb" onclick="showSec('emulator',this)">🎯 Whale Emulator</button>
+  <button class="nb" onclick="showSec('funds',this)">Fondi</button>
+</nav>
+
+<!-- ════════ OVERVIEW ════════ -->
+<div class="sec active fi" id="sec-overview">
+  <div class="alert"><strong>⚠ MACRO ALERT 13 Mar 2026:</strong> S&P 500 rompe 6,770 (−0.61%). VIX 27.38 — zona stress. Brent crude sopra $100 (Stretto di Hormuz de-facto bloccato da Iran). <strong style="color:var(--gold)">Gold $5,107</strong> — giù da ATH $5,589. <strong style="color:var(--silver)">Silver $83</strong> (−2%). G7 valuta rilascio riserve strategiche oil.</div>
+  <div class="kpi4">
+    <div class="kpi c-red" id="kpi-sp500"><div class="kl">S&P 500</div><div class="kv" id="v-sp500">6,632</div><div class="ks dn" id="c-sp500">▼ -40.43 (-0.61%)</div></div>
+    <div class="kpi c-red" id="kpi-ndx"><div class="kl">NASDAQ Composite</div><div class="kv" id="v-ndx">22,105</div><div class="ks dn" id="c-ndx">▼ -206.62 (-0.93%)</div></div>
+    <div class="kpi c-amber" id="kpi-vix"><div class="kl">VIX — Fear Index</div><div class="kv neu" id="v-vix">27.38</div><div class="ks neu">Soglia stress &gt;25 attiva</div></div>
+    <div class="kpi c-crude" id="kpi-oil"><div class="kl">Brent Crude</div><div class="kv up" id="v-oil">$101.24</div><div class="ks up" id="c-oil">▲ +$1.42 (+1.42%)</div></div>
+  </div>
+  <div class="kpi4">
+    <div class="kpi c-gold" id="kpi-gold"><div class="kl">Gold Spot</div><div class="kv" id="v-gold" style="color:var(--gold)">$5,107</div><div class="ks dn" id="c-gold">▼ -63 (-1.22%)</div></div>
+    <div class="kpi c-silver" id="kpi-silver"><div class="kl">Silver Spot</div><div class="kv" id="v-silver" style="color:var(--silver)">$83.10</div><div class="ks dn" id="c-silver">▼ -1.12 (-1.33%)</div></div>
+    <div class="kpi c-green"><div class="kl">ETF AUM tot.</div><div class="kv">$14.35T</div><div class="ks up">+$62.3B sett.</div></div>
+    <div class="kpi c-blue"><div class="kl">Money Market</div><div class="kv">$9.1T</div><div class="ks neu">Capitali in attesa</div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">Performance 7 giorni — indici</div><div class="ch-wrap" style="height:190px"><canvas id="c-perf7d"></canvas></div></div>
+    <div class="card"><div class="ct">Materie prime — 7 giorni</div><div class="ch-wrap" style="height:190px"><canvas id="c-comm7d"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Sentiment istituzionale globale — Fear &amp; Greed</div>
+    <div style="max-width:600px">
+      <div class="meter-track"><div class="meter-needle" style="left:32%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-bottom:6px"><span>Ext. Fear</span><span>Fear</span><span>Neutro</span><span>Greed</span><span>Ext. Greed</span></div>
+    </div>
+    <div style="font-size:11px;color:var(--red);margin-top:4px"><strong>FEAR 32/100</strong> — De-risking istituzionale · VIX 27 · Rotazione difensiva · Flight to quality in bond e oro</div>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="ct">S&P 500 — Range 52 sett.</div><div id="sp500-range"></div></div>
+    <div class="card"><div class="ct">NASDAQ — Range 52 sett.</div><div id="ndx-range"></div></div>
+    <div class="card">
+      <div class="ct">Rebalance S&P 500 — 23 Mar</div>
+      <table class="dt"><tbody>
+        <tr><td><span class="b b-g">IN</span></td><td>Vertiv Holdings (VRT)</td></tr>
+        <tr><td><span class="b b-g">IN</span></td><td>Lumentum Holdings (LITE)</td></tr>
+        <tr><td><span class="b b-r">OUT</span></td><td>Match Group (MTCH)</td></tr>
+        <tr><td><span class="b b-r">OUT</span></td><td>Paycom Software (PAYC)</td></tr>
+      </tbody></table>
+      <div style="font-size:9px;color:var(--text3);margin-top:8px">SPY/VOO devono acquistare VRT+LITE meccanicamente — spike volume previsti pre-23 Mar</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ COMMODITIES ════════ -->
+<div class="sec fi" id="sec-commodities">
+
+  <div class="alert alert-red"><strong>🔴 CRISI STRETTO DI HORMUZ — 13 Mar 2026, Giorno 12:</strong> Iran ha ridotto i transiti da 24/giorno a 4. Il 20% dell'oil globale passa per lo stretto. Trump: "prevenire nucleare iraniano viene prima del prezzo oil". Khamenei: "Hormuz resterà chiuso". G7 valuta rilascio SPR coordinato. Brent ha toccato $120/bbl il 9 Mar (max da giu 2022).</div>
+
+  <!-- PRICE BOARDS -->
+  <div class="g3">
+    <div class="price-board">
+      <div class="pb-header" style="border-left:3px solid var(--crude)">
+        <span class="pb-title" style="color:var(--crude)">🛢 Brent Crude Oil</span>
+        <span class="b b-a">WTI $95.40</span>
+      </div>
+      <div class="pb-body">
+        <div class="big-price up" id="big-oil">$101.24</div>
+        <div class="price-meta">
+          <span>24h: <strong class="up" id="oil-24h">+$1.42 (+1.42%)</strong></span>
+          <span>7d: <strong class="up">+$9.11</strong></span>
+          <span>ATH 2026: <strong style="color:var(--crude)">$120.50</strong></span>
+          <span>Support: <strong>$90.00</strong></span>
+        </div>
+        <div style="margin-top:10px;height:80px"><canvas id="c-oil-spark"></canvas></div>
+      </div>
+    </div>
+    <div class="price-board">
+      <div class="pb-header" style="border-left:3px solid var(--gold)">
+        <span class="pb-title" style="color:var(--gold)">🥇 Gold Spot</span>
+        <span class="b b-gold">XAU/USD</span>
+      </div>
+      <div class="pb-body">
+        <div class="big-price dn" id="big-gold" style="color:var(--gold)">$5,107</div>
+        <div class="price-meta">
+          <span>24h: <strong class="dn" id="gold-24h">-$63 (-1.22%)</strong></span>
+          <span>7d: <strong class="dn">-$182</strong></span>
+          <span>ATH 2026: <strong style="color:var(--gold)">$5,589</strong></span>
+          <span>JP Morgan: <strong class="up">$6,300 target</strong></span>
+        </div>
+        <div style="margin-top:10px;height:80px"><canvas id="c-gold-spark"></canvas></div>
+      </div>
+    </div>
+    <div class="price-board">
+      <div class="pb-header" style="border-left:3px solid var(--silver)">
+        <span class="pb-title" style="color:var(--silver)">🥈 Silver Spot</span>
+        <span class="b b-x">XAG/USD</span>
+      </div>
+      <div class="pb-body">
+        <div class="big-price dn" id="big-silver" style="color:var(--silver)">$83.10</div>
+        <div class="price-meta">
+          <span>24h: <strong class="dn" id="silver-24h">-$1.12 (-1.33%)</strong></span>
+          <span>7d: <strong class="dn">-$4.80</strong></span>
+          <span>ATH 2026: <strong style="color:var(--silver)">$116.40</strong></span>
+          <span>Support: <strong>$70.00</strong></span>
+        </div>
+        <div style="margin-top:10px;height:80px"><canvas id="c-silver-spark"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VESSEL/AIRCRAFT TRACKING MAP -->
+  <div class="card">
+    <div class="ct">🛳 Tracking Navi &amp; Aerei — Trasporto materie prime (live simulato)</div>
+    <div style="position:relative">
+      <canvas id="vesselMap" height="380"></canvas>
+      <div id="mapTooltip" style="position:absolute;background:var(--bg4);border:1px solid var(--border2);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--text);pointer-events:none;display:none;z-index:10;max-width:200px"></div>
+    </div>
+    <div class="map-legend">
+      <span><span class="ml-dot" style="background:var(--crude)"></span>Petroliere (VLCC / suezmax)</span>
+      <span><span class="ml-dot" style="background:var(--gold)"></span>Cargo oro / vault transfer</span>
+      <span><span class="ml-dot" style="background:var(--silver)"></span>Cargo argento / minerali</span>
+      <span><span class="ml-dot" style="background:var(--red)"></span>Zona a rischio / conflitto</span>
+      <span><span class="ml-dot" style="background:var(--blue)"></span>Rotte aeree cargo</span>
+      <span><span class="ml-dot" style="background:var(--text3)"></span>Chokepoint strategico</span>
+    </div>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px">Fonte: MarineTraffic · FlightAware · IMO · Passa il mouse sulle navi per i dettagli. Dati con ritardo 15 min.</div>
+  </div>
+
+  <!-- MINES & EXTRACTION -->
+  <div class="g3">
+    <div class="card">
+      <div class="ct">⛏ Top miniere — Crude Oil (produzione mbarili/giorno)</div>
+      <div class="mine-row"><span class="mine-flag">🇸🇦</span><div class="mine-info"><div class="mine-name">Ghawar Field — Saudi Arabia</div><div class="mine-detail">Il più grande campo on-shore al mondo</div></div><div class="mine-output"><div style="color:var(--crude);font-weight:700">3.8M bbl/d</div><span class="b b-g">ONLINE</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇮🇶</span><div class="mine-info"><div class="mine-name">Rumaila — Iraq</div><div class="mine-detail">Mega-campo nel Golfo Persico</div></div><div class="mine-output"><div style="color:var(--crude);font-weight:700">1.4M bbl/d</div><span class="b b-g">ONLINE</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇮🇷</span><div class="mine-info"><div class="mine-name">Ahvaz — Iran</div><div class="mine-detail">Produzione ridotta da sanzioni</div></div><div class="mine-output"><div style="color:var(--amber);font-weight:700">0.9M bbl/d</div><span class="b b-a">LIMITATO</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇷🇺</span><div class="mine-info"><div class="mine-name">Samotlor — Russia</div><div class="mine-detail">Maggiore campo Siberia occ.</div></div><div class="mine-output"><div style="color:var(--amber);font-weight:700">0.7M bbl/d</div><span class="b b-a">SANZIONATO</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇺🇸</span><div class="mine-info"><div class="mine-name">Permian Basin — Texas</div><div class="mine-detail">Shale + tight oil, crescita rapida</div></div><div class="mine-output"><div style="color:var(--accent);font-weight:700">5.8M bbl/d</div><span class="b b-g">RECORD</span></div></div>
+    </div>
+    <div class="card">
+      <div class="ct">🥇 Top miniere — Oro (produzione Moz/anno)</div>
+      <div class="mine-row"><span class="mine-flag">🇦🇺</span><div class="mine-info"><div class="mine-name">Super Pit — Kalgoorlie, Australia</div><div class="mine-detail">Newmont · Open-pit mining</div></div><div class="mine-output"><div style="color:var(--gold);font-weight:700">0.75 Moz/a</div><span class="b b-g">ONLINE</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇿🇦</span><div class="mine-info"><div class="mine-name">Mponeng — Sudafrica</div><div class="mine-detail">La miniera più profonda del mondo</div></div><div class="mine-output"><div style="color:var(--gold);font-weight:700">0.28 Moz/a</div><span class="b b-g">ONLINE</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇵🇪</span><div class="mine-info"><div class="mine-name">Yanacocha — Peru</div><div class="mine-detail">Newmont · Riserve 30 anni</div></div><div class="mine-output"><div style="color:var(--gold);font-weight:700">0.55 Moz/a</div><span class="b b-g">ONLINE</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇨🇦</span><div class="mine-info"><div class="mine-name">Canadian Malartic — Quebec</div><div class="mine-detail">Barrick Gold · Più grande Canada</div></div><div class="mine-output"><div style="color:var(--gold);font-weight:700">0.60 Moz/a</div><span class="b b-g">ONLINE</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇨🇳</span><div class="mine-info"><div class="mine-name">Muruntau — Uzbekistan</div><div class="mine-detail">Open-pit · Più grande mondo</div></div><div class="mine-output"><div style="color:var(--gold);font-weight:700">2.0 Moz/a</div><span class="b b-g">LEADER</span></div></div>
+    </div>
+    <div class="card">
+      <div class="ct">🥈 Top miniere — Argento (produzione Moz/anno)</div>
+      <div class="mine-row"><span class="mine-flag">🇲🇽</span><div class="mine-info"><div class="mine-name">Fresnillo — Mexico</div><div class="mine-detail">Fresnillo plc · #1 primario argento</div></div><div class="mine-output"><div style="color:var(--silver);font-weight:700">47 Moz/a</div><span class="b b-g">LEADER</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇵🇪</span><div class="mine-info"><div class="mine-name">Antamina — Peru</div><div class="mine-detail">Glencore / BHP / Teck</div></div><div class="mine-output"><div style="color:var(--silver);font-weight:700">28 Moz/a</div><span class="b b-g">ONLINE</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇵🇱</span><div class="mine-info"><div class="mine-name">KGHM Polkowice — Polonia</div><div class="mine-detail">Argento + rame · NATO supply</div></div><div class="mine-output"><div style="color:var(--silver);font-weight:700">42 Moz/a</div><span class="b b-g">ONLINE</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇨🇱</span><div class="mine-info"><div class="mine-name">Escondida — Cile</div><div class="mine-detail">BHP · By-product di rame</div></div><div class="mine-output"><div style="color:var(--silver);font-weight:700">19 Moz/a</div><span class="b b-g">ONLINE</span></div></div>
+      <div class="mine-row"><span class="mine-flag">🇷🇺</span><div class="mine-info"><div class="mine-name">Dukat — Russia (Magadan)</div><div class="mine-detail">Polymetal · Esportazione bloccata</div></div><div class="mine-output"><div style="color:var(--red);font-weight:700">9 Moz/a</div><span class="b b-r">BLOCCATO</span></div></div>
+    </div>
+  </div>
+
+  <!-- THREATS TO PRICE -->
+  <div style="font-family:var(--sans);font-weight:700;font-size:16px;color:#fff;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">⚡ Minacce al livello di prezzo — Risk Matrix</div>
+  <div class="threat-grid">
+    <div class="threat-card">
+      <span class="threat-level tl-critical">CRITICO</span>
+      <div class="threat-icon">🌊</div>
+      <div class="threat-title">Chiusura Stretto di Hormuz</div>
+      <div class="threat-sub">Iran · Conflitto attivo 12+ giorni</div>
+      <div class="threat-impact"><strong style="color:var(--red)">Oil:</strong> +20–50% · 20% oil globale a rischio. Transiti scesi da 24 a 4/giorno. Scenario $150 bbl se persiste 30 giorni.<br><strong style="color:var(--amber)">Gold:</strong> Supportivo ma pressione da dollaro forte.<br><strong style="color:var(--silver)">Silver:</strong> Misto — domanda industriale cala in Asia.</div>
+    </div>
+    <div class="threat-card">
+      <span class="threat-level tl-critical">CRITICO</span>
+      <div class="threat-icon">🏦</div>
+      <div class="threat-title">Fed — Tassi "higher for longer"</div>
+      <div class="threat-sub">Prossima riunione: 18–19 Mar 2026</div>
+      <div class="threat-impact"><strong style="color:var(--red)">Gold/Silver:</strong> Bearish — nessun taglio atteso, 70% probabilità taglio solo a estate. Asset non-yield sotto pressione.<br><strong style="color:var(--gold)">Gold ATH $5,589</strong> → $5,107 già −8.6%.<br><strong style="color:var(--amber)">Oil:</strong> Recessione da oil shock può frenare domanda.</div>
+    </div>
+    <div class="threat-card">
+      <span class="threat-level tl-high">ALTO</span>
+      <div class="threat-icon">💵</div>
+      <div class="threat-title">Dollaro USA — USD Index forte</div>
+      <div class="threat-sub">DXY 99.42 · Multi-year high</div>
+      <div class="threat-impact"><strong style="color:var(--red)">Gold/Silver/Oil:</strong> Tutti prezzati in USD — dollaro forte riduce appeal per investitori non-USD (India, Cina).<br>India e Cina: principali importatori di oro/argento, domanda compressa.<br><strong>Breakout DXY &gt;100</strong> → rischio correzione metalli −10%.</div>
+    </div>
+    <div class="threat-card">
+      <span class="threat-level tl-high">ALTO</span>
+      <div class="threat-icon">🛡</div>
+      <div class="threat-title">Rilascio SPR (G7 / IEA)</div>
+      <div class="threat-sub">IEA: coordinamento record già avviato</div>
+      <div class="threat-impact"><strong style="color:var(--crude)">Oil:</strong> Ogni rilascio SPR crea pressione immediata di −3/−8% a breve. IEA ha già eseguito rilascio coordinato record il 12 Mar 2026.<br><strong style="color:var(--amber)">Gold:</strong> Mildly bearish — riduce shock inflattivo.<br>Saudi Arabia potrebbe compensare aumentando produzione.</div>
+    </div>
+    <div class="threat-card">
+      <span class="threat-level tl-medium">MEDIO</span>
+      <div class="threat-icon">⚡</div>
+      <div class="threat-title">Domanda Silver — Transizione Green</div>
+      <div class="threat-sub">EV · Pannelli solari · Elettronica</div>
+      <div class="threat-impact"><strong style="color:var(--accent)">Silver:</strong> Bullish strutturale. Ogni pannello solare usa 20g Ag. IEA: domanda silver +40% entro 2030 da solar+EV. Major economies stockpile rare earth metals — silver incluso.<br><strong>Rischio bear:</strong> AI/manifattura Asia rallenta → meno domanda industriale a breve.</div>
+    </div>
+    <div class="threat-card">
+      <span class="threat-level tl-medium">MEDIO</span>
+      <div class="threat-icon">🤝</div>
+      <div class="threat-title">OPEC+ Production Discipline</div>
+      <div class="threat-sub">Prossima riunione: Aprile 2026</div>
+      <div class="threat-impact"><strong style="color:var(--crude)">Oil:</strong> Arabia Saudita e Russia mantengono tagli. Russia sanzionata: ~0.7M bbl/d fuori mercato. Iraq spesso esce dalle quote.<br>Scenario bullish: OPEC mantiene tagli + Hormuz bloccato = $130–150.<br>Scenario bearish: US Permian record 5.8M bbl/d compensa.</div>
+    </div>
+    <div class="threat-card">
+      <span class="threat-level tl-high">ALTO</span>
+      <div class="threat-icon">💰</div>
+      <div class="threat-title">Liquidazione istituzionale — "Liquidity Event"</div>
+      <div class="threat-sub">Margin calls equity → vendita metalli</div>
+      <div class="threat-impact"><strong style="color:var(--red)">Gold/Silver:</strong> Controstrattura. VIX 27 = margin calls. Istituzionali liquidano posizioni gold/silver per coprire perdite equity. Già accaduto: oro −$482 da ATH in 2 settimane.<br>Newmont (NEM) e Barrick (GOLD) sotto pressione — stocks mining −5/8%.</div>
+    </div>
+    <div class="threat-card">
+      <span class="threat-level tl-medium">MEDIO</span>
+      <div class="threat-icon">🏗</div>
+      <div class="threat-title">Banche centrali — Gold Accumulation</div>
+      <div class="threat-sub">Cina · Polonia · India · Turchia</div>
+      <div class="threat-impact"><strong style="color:var(--accent)">Gold:</strong> Bullish strutturale. Banche centrali hanno accumulato record di oro per 3 anni consecutivi (~1,100 ton/anno). De-dollarization trend. Cina ha aumentato riserve auree del 22% dal 2022.<br>JP Morgan target gold 2026: <strong style="color:var(--gold)">$6,300/oz</strong>.</div>
+    </div>
+    <div class="threat-card">
+      <span class="threat-level tl-low">BASSO</span>
+      <div class="threat-icon">⚓</div>
+      <div class="threat-title">Rotte alternative — Capo di Buona Speranza</div>
+      <div class="threat-sub">+10–15 giorni navigazione · +$1–2M/viaggio</div>
+      <div class="threat-impact"><strong style="color:var(--crude)">Oil:</strong> Le navi che evitano Hormuz raddoppiano le rotte (+18 giorni). Costi di trasporto +$2M per viaggio. Raffinerie europee e asiatiche pagano premium.<br>Suez anch'esso sotto pressione Houthi (2025).<br>Questo mantiene un "insurance premium" sul prezzo oil di ~$5–10.</div>
+    </div>
+  </div>
+
+  <!-- FLOWS INTO COMMODITIES -->
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Flussi ETF commodity — gen/feb 2026</div>
+      <div class="ch-wrap" style="height:200px"><canvas id="c-comm-flows"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">Correlazione Oil — Gold — USD Index (normalizzata)</div>
+      <div class="ch-wrap" style="height:200px"><canvas id="c-corr"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Rotte strategiche e chokepoint — Stato operativo</div>
+    <table class="dt">
+      <thead><tr><th>Chokepoint</th><th>Volume/giorno</th><th>Materia prima</th><th>Stato</th><th>Impatto</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Stretto di Hormuz</strong></td><td>20–21M bbl/d oil</td><td>Oil · GNL</td><td><span class="b b-r">⚠ BLOCCATO (de facto)</span></td><td class="dn">Transiti: 4/giorno (da 24)</td></tr>
+        <tr><td><strong>Canale di Suez</strong></td><td>12–13M bbl/d + bulk</td><td>Oil · Grano · Container</td><td><span class="b b-a">⚠ ROTTE DEVIANTI</span></td><td class="dn">Attacchi Houthi in corso</td></tr>
+        <tr><td><strong>Stretto di Malacca</strong></td><td>15M bbl/d + cargo</td><td>Oil · Metalli · Container</td><td><span class="b b-g">NORMALE</span></td><td class="up">Rotta key Asia</td></tr>
+        <tr><td><strong>Stretto di Gibilterra</strong></td><td>Transit hub</td><td>Oil · GNL</td><td><span class="b b-g">NORMALE</span></td><td class="up">Alternativa Nord Africa</td></tr>
+        <tr><td><strong>Capo di Buona Speranza</strong></td><td>Rotta alternativa</td><td>Oil · Metalli</td><td><span class="b b-a">CONGESTIONATO</span></td><td class="dn">+18gg navigazione</td></tr>
+        <tr><td><strong>Rotte cargo aereo</strong></td><td>~2,500 voli/sett. gold</td><td>Gold · High-value metals</td><td><span class="b b-g">NORMALE</span></td><td class="up">Preferita per oro fisico</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════════ VOLUME ════════ -->
+<div class="sec fi" id="sec-volume">
+  <div class="kpi4">
+    <div class="kpi c-red"><div class="kl">SPY vol. 13 Mar</div><div class="kv">2.96B</div><div class="ks dn">Media: 5.46B (−46%)</div></div>
+    <div class="kpi c-red"><div class="kl">QQQ vol. 13 Mar</div><div class="kv">6.54B</div><div class="ks dn">Media: 8.60B (−24%)</div></div>
+    <div class="kpi c-green"><div class="kl">NASDAQ vol. +2025</div><div class="kv">+88.3%</div><div class="ks up">Record YoY</div></div>
+    <div class="kpi c-amber"><div class="kl">Dark pool %</div><div class="kv">~38%</div><div class="ks neu">Volume totale SPY</div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">Volume SPY — 9 sessioni vs media</div><div class="ch-wrap" style="height:190px"><canvas id="c-spy-vol"></canvas></div></div>
+    <div class="card"><div class="ct">Volume QQQ — 9 sessioni vs media</div><div class="ch-wrap" style="height:190px"><canvas id="c-qqq-vol"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct">Top NASDAQ per volume</div>
+      <table class="dt">
+        <thead><tr><th>Ticker</th><th>Volume</th><th>Categoria</th><th>Trend</th></tr></thead>
+        <tbody>
+          <tr><td><strong>NVDA</strong></td><td>173.6M/gg</td><td>AI / Chip</td><td><span class="b b-g">CALL HEAVY</span></td></tr>
+          <tr><td><strong>TSLA</strong></td><td>Alta freq.</td><td>Growth</td><td><span class="b b-a">VOLATILE</span></td></tr>
+          <tr><td><strong>AAPL</strong></td><td>Istituz.</td><td>Blue-chip</td><td><span class="b b-r">SELL-SIDE</span></td></tr>
+          <tr><td><strong>MSFT</strong></td><td>Istituz.</td><td>Mega-cap</td><td><span class="b b-r">LIQUIDAZ.</span></td></tr>
+          <tr><td><strong>META</strong></td><td>Alta rot.</td><td>Mag7</td><td><span class="b b-x">NEUTRO</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="ct">Dark Pool &amp; Options Flow — 13 Mar</div>
+      <div class="dp-i"><span class="dp-t">SPY</span><span style="font-size:10px;color:var(--text2);width:120px">Whale BID 5gg</span><div class="dp-b"><div class="dp-bf" style="width:72%;background:var(--red)"></div></div><span class="dp-v dn">Bearish hedge</span></div>
+      <div class="dp-i"><span class="dp-t">QQQ</span><span style="font-size:10px;color:var(--text2);width:120px">Put/Call ratio</span><div class="dp-b"><div class="dp-bf" style="width:65%;background:var(--red)"></div></div><span class="dp-v dn">1.42 bearish</span></div>
+      <div class="dp-i"><span class="dp-t">NVDA</span><span style="font-size:10px;color:var(--text2);width:120px">Call flow anomalo</span><div class="dp-b"><div class="dp-bf" style="width:88%;background:var(--accent)"></div></div><span class="dp-v up">+$340M noz.</span></div>
+      <div class="dp-i"><span class="dp-t">AAPL</span><span style="font-size:10px;color:var(--text2);width:120px">Block dark pool</span><div class="dp-b"><div class="dp-bf" style="width:55%;background:var(--red)"></div></div><span class="dp-v dn">Sell-side</span></div>
+      <div class="dp-i"><span class="dp-t">GLD</span><span style="font-size:10px;color:var(--text2);width:120px">Gold ETF inflow</span><div class="dp-b"><div class="dp-bf" style="width:70%;background:var(--gold)"></div></div><span class="dp-v" style="color:var(--gold)">+$2.1B</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ FLOWS ════════ -->
+<div class="sec fi" id="sec-flows">
+  <div class="kpi4">
+    <div class="kpi c-green"><div class="kl">ETF inflows sett.</div><div class="kv">+$62.3B</div><div class="ks up">Netta emissione</div></div>
+    <div class="kpi c-red"><div class="kl">Mutual fund outflows</div><div class="kv">-$14.6B</div><div class="ks dn">Riscatti</div></div>
+    <div class="kpi c-green"><div class="kl">Non-US ETF gen 2026</div><div class="kv">$60B</div><div class="ks up">Record mensile</div></div>
+    <div class="kpi c-amber"><div class="kl">QQQ 5 giorni</div><div class="kv">+$2.9B</div><div class="ks dn">1 mese: -$1.86B</div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">Flussi categoria — ICI 25 Feb 2026</div><div class="ch-wrap" style="height:210px"><canvas id="c-cat-flows"></canvas></div></div>
+    <div class="card"><div class="ct">QQQ — flussi per orizzonte</div><div class="ch-wrap" style="height:210px"><canvas id="c-qqq-horiz"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Rotazione flussi per asset class</div>
+    <div class="pr-row"><span class="pr-label">Bond taxable</span><div class="pr-track"><div class="pr-fill" style="width:90%;background:var(--blue)"></div></div><span class="pr-val" style="color:var(--blue)">+$31.5B</span></div>
+    <div class="pr-row"><span class="pr-label">World equity</span><div class="pr-track"><div class="pr-fill" style="width:69%;background:var(--accent)"></div></div><span class="pr-val up">+$13.8B</span></div>
+    <div class="pr-row"><span class="pr-label">Commodity ETF</span><div class="pr-track"><div class="pr-fill" style="width:28%;background:var(--amber)"></div></div><span class="pr-val" style="color:var(--amber)">+$5.62B</span></div>
+    <div class="pr-row"><span class="pr-label">Bond muni</span><div class="pr-track"><div class="pr-fill" style="width:13%;background:var(--purple)"></div></div><span class="pr-val" style="color:var(--purple)">+$2.67B</span></div>
+    <div class="pr-row"><span class="pr-label">Domestic equity</span><div class="pr-track"><div class="pr-fill" style="width:29%;background:var(--red)"></div></div><span class="pr-val dn">-$5.74B</span></div>
+  </div>
+  <div class="card"><div class="ct">ETF vs Mutual Fund — rotazione cumulativa 2020–2026 ($T)</div><div class="ch-wrap" style="height:170px"><canvas id="c-etf-mf"></canvas></div></div>
+</div>
+
+<!-- ════════ WHALES ════════ -->
+<div class="sec fi" id="sec-whales">
+  <div class="alert"><strong>📡 Whale:</strong> Operatore con ordini &gt;$1M notional. Operano via dark pool. Il retail non vede questi ordini in real-time. Tracking: blocchi a tape, options flow anomalo, on-chain metrics, vessel data.</div>
+  <div class="kpi4">
+    <div class="kpi c-red"><div class="kl">Vendite istit. recenti</div><div class="kv">-$8.3B</div><div class="ks dn">Mega-cap US</div></div>
+    <div class="kpi c-amber"><div class="kl">BTC whale score</div><div class="kv">0.90</div><div class="ks neu">Accumulation</div></div>
+    <div class="kpi c-green"><div class="kl">NVDA call anomalo</div><div class="kv">+$340M</div><div class="ks up">Nozionale</div></div>
+    <div class="kpi c-blue"><div class="kl">BlackRock equity</div><div class="kv">+3%</div><div class="ks" style="color:var(--blue)">Overweight</div></div>
+  </div>
+  <div class="wg">
+    <div class="wc"><span class="we">🐋</span><div class="wn">Classe A — Mega Whale</div><div class="wa">Ordini &gt;$500M · Dark pool</div><div class="wp"><span><span>Profilo</span><span class="b b-r">SELL-SIDE</span></span><span><span>Target</span><span>Bond · Gold</span></span><span><span>Signal</span><span class="b b-a">DE-RISKING</span></span><span><span>Ticker</span><span>TLT · GLD · IAU</span></span></div></div>
+    <div class="wc"><span class="we">🦈</span><div class="wn">Classe B — Institutional</div><div class="wa">Ordini $50M–$500M · Mix</div><div class="wp"><span><span>Profilo</span><span class="b b-a">MIXED</span></span><span><span>Target</span><span>AI · Copper · Oil</span></span><span><span>Signal</span><span class="b b-g">ACCUMUL.</span></span><span><span>Ticker</span><span>NVDA · COPX · XOM</span></span></div></div>
+    <div class="wc"><span class="we">🐠</span><div class="wn">Classe C — HFT/Options</div><div class="wa">Ordini $1M–$50M · Options</div><div class="wp"><span><span>Profilo</span><span class="b b-b">OPTIONS</span></span><span><span>Target</span><span>VIX · Oil puts</span></span><span><span>Signal</span><span class="b b-r">PUT HEAVY</span></span><span><span>Ticker</span><span>SPY put · OIH call</span></span></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">Options flow — premium per strike (5gg)</div><div class="ch-wrap" style="height:200px"><canvas id="c-whale-opt"></canvas></div></div>
+    <div class="card">
+      <div class="ct">Whale positioning — tutti gli asset</div>
+      <table class="dt">
+        <thead><tr><th>Asset</th><th>Posizione</th><th>Flusso</th><th>Driver</th></tr></thead>
+        <tbody>
+          <tr><td>Bond US 10Y</td><td><span class="b b-g">LONG</span></td><td>+$31.5B/sett</td><td>Flight to quality</td></tr>
+          <tr><td>Gold / GLD</td><td><span class="b b-g">LONG</span></td><td>+$5.62B ETF</td><td>Hedge inflazione</td></tr>
+          <tr><td>Brent Oil</td><td><span class="b b-g">LONG</span></td><td>+$3.2B OIH</td><td>Hormuz premium</td></tr>
+          <tr><td>NVDA</td><td><span class="b b-g">CALL</span></td><td>+$340M noz.</td><td>AI infrastruttura</td></tr>
+          <tr><td>SPY</td><td><span class="b b-r">PUT heavy</span></td><td>-$8.3B</td><td>Downside hedge</td></tr>
+          <tr><td>Bitcoin ETF</td><td><span class="b b-a">ACCUM.</span></td><td>Score 0.90</td><td>Macro play</td></tr>
+          <tr><td>Silver / SLV</td><td><span class="b b-g">LONG LT</span></td><td>Structural</td><td>EV + Solar +40% 2030</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ FUNDS ════════ -->
+<div class="sec fi" id="sec-funds">
+  <div class="alert alert-blue"><strong style="color:var(--blue)">ℹ Big Three:</strong> BlackRock, Vanguard e State Street sono top 3 azionisti nel 100% dei titoli S&P 500 e singolo maggiore nell'84%. Gestiscono &gt;$27T combinati.</div>
+  <div class="card">
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px"><span style="font-family:var(--sans);font-weight:800;font-size:20px;color:var(--red)">BlackRock</span><span class="b b-b">NYSE: BLK · $921.99</span></div>
+    <div class="kpi4" style="margin-bottom:14px">
+      <div class="kpi c-red"><div class="kl">AUM totale</div><div class="kv">$14.0T</div><div class="ks up">Record dic 2025</div></div>
+      <div class="kpi c-green"><div class="kl">Equity positioning</div><div class="kv">+3%</div><div class="ks up">Overweight</div></div>
+      <div class="kpi c-blue"><div class="kl">iShares ETF AUM</div><div class="kv">~$4T</div><div class="ks" style="color:var(--blue)">Leader globale</div></div>
+      <div class="kpi c-amber"><div class="kl">Top shareholder</div><div class="kv" style="font-size:16px">Vanguard</div><div class="ks">8.87% · ~$15.7B</div></div>
+    </div>
+    <table class="dt">
+      <thead><tr><th>Azionista</th><th>Quota</th><th>Valore</th><th>Trend</th></tr></thead>
+      <tbody>
+        <tr><td>Vanguard Group</td><td>8.87% — 13.9M azioni</td><td>~$15.7B</td><td><span class="b b-g">+1.6%</span></td></tr>
+        <tr><td>Kuwait Investment Auth.</td><td>5.16% — 7.99M azioni</td><td>~$9.0B</td><td><span class="b b-x">Stabile</span></td></tr>
+        <tr><td>BlackRock Inst. Trust</td><td>4.45% — 6.9M azioni</td><td>~$7.8B</td><td><span class="b b-r">-4.3%</span></td></tr>
+        <tr><td>State Street Global</td><td>4.05% — 6.27M azioni</td><td>~$7.1B</td><td><span class="b b-r">-1.4%</span></td></tr>
+        <tr><td>Capital Research Global</td><td>2.49% — 3.86M azioni</td><td>~$4.3B</td><td><span class="b b-g">+12.4%</span></td></tr>
+        <tr><td>Two Sigma Advisers</td><td>Quant hedge fund</td><td>~$1.6M</td><td><span class="b b-g">+275%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div style="font-family:var(--sans);font-weight:800;font-size:18px;color:var(--accent);margin-bottom:12px">Vanguard Group</div>
+      <div class="g2" style="margin-bottom:12px">
+        <div style="background:var(--bg3);padding:10px;border-radius:6px;border:1px solid var(--border)"><div style="font-size:9px;color:var(--text3)">AUM</div><div style="font-family:var(--sans);font-weight:700;font-size:18px;color:#fff">~$9.3T</div></div>
+        <div style="background:var(--bg3);padding:10px;border-radius:6px;border:1px solid var(--border)"><div style="font-size:9px;color:var(--text3)">Struttura</div><div style="font-family:var(--sans);font-weight:700;font-size:13px;color:var(--accent)">Client-owned</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2)">Unica asset manager al mondo di tipo <strong style="color:#fff">client-owned</strong>: i fondi Vanguard possiedono la società. Fondato da John Bogle 1975. Expense ratios più bassi del settore.</div>
+    </div>
+    <div class="card">
+      <div class="ct">Big Three — AUM totale ($T)</div>
+      <div class="ch-wrap" style="height:170px"><canvas id="c-big3"></canvas></div>
+      <div style="font-size:9px;color:var(--text3);margin-top:6px">I Big Three controllano &gt;74% del mercato ETF azionario globale. Fonte: U.S. News / HBR 2024.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ WHALE EMULATOR ════════ -->
+<div class="sec fi" id="sec-emulator">
+
+  <div class="alert alert-blue"><strong style="color:var(--blue)">🎯 Whale Emulator:</strong> Osserva le posizioni dei principali operatori istituzionali in tempo reale, analizza il loro win rate storico e copia le loro trade con un click. Il sistema calcola il P&amp;L del tuo portafoglio emulato aggiornato ogni 10 secondi. <strong style="color:var(--amber)">⚠ Simulazione educativa — i dati sono generati sinteticamente su base realistica.</strong></div>
+
+  <!-- KPI ROW -->
+  <div class="kpi4" style="margin-bottom:20px">
+    <div class="kpi c-green">
+      <div class="kl">Win rate medio whales</div>
+      <div class="kv up" id="emu-avg-wr">67.4%</div>
+      <div class="ks up">Ultimi 90 giorni</div>
+    </div>
+    <div class="kpi c-amber">
+      <div class="kl">Posizioni aperte live</div>
+      <div class="kv" id="emu-open-pos" style="color:var(--amber)">24</div>
+      <div class="ks neu">Aggiornate ogni 10s</div>
+    </div>
+    <div class="kpi c-green" id="kpi-my-pnl">
+      <div class="kl">Il mio P&amp;L (copiato)</div>
+      <div class="pnl-counter up" id="emu-my-pnl">+$0.00</div>
+      <div class="ks" id="emu-my-pnl-pct" style="color:var(--text3)">0 posizioni copiate</div>
+    </div>
+    <div class="kpi c-blue">
+      <div class="kl">Segnale più forte ora</div>
+      <div class="kv" id="emu-top-signal" style="color:var(--blue);font-size:16px">NVDA LONG</div>
+      <div class="ks" id="emu-top-signal-wr" style="color:var(--blue)">Blackwater 78% WR</div>
+    </div>
+  </div>
+
+  <!-- WHALE PROFILES -->
+  <div style="font-family:var(--sans);font-weight:700;font-size:15px;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+    Profili Whale — Win Rate Live
+    <span style="font-size:10px;font-family:var(--mono);color:var(--text3);font-weight:400">Clicca "Copia segnali" per seguire una whale</span>
+  </div>
+  <div class="we-grid" id="whaleProfileGrid"><!-- populated by JS --></div>
+
+  <!-- MAIN CONTENT GRID -->
+  <div class="g2" style="align-items:start">
+
+    <!-- LEFT: live trade feed -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <div class="ct" style="margin:0">Feed trade live — tutte le whales</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text3)">
+          <span id="feed-count" style="color:var(--accent)">0</span> trade totali
+          <span style="width:5px;height:5px;background:var(--accent);border-radius:50%;animation:pulse 1.4s infinite;display:inline-block"></span>
+        </div>
+      </div>
+      <!-- column headers -->
+      <div style="display:flex;align-items:center;gap:10px;padding:5px 10px;border-bottom:1px solid var(--border);background:var(--bg3)">
+        <span style="font-size:9px;color:var(--text3);width:50px">Ora</span>
+        <span style="font-size:9px;color:var(--text3);width:90px">Whale</span>
+        <span style="font-size:9px;color:var(--text3);width:55px">Asset</span>
+        <span style="font-size:9px;color:var(--text3);width:40px">Dir.</span>
+        <span style="font-size:9px;color:var(--text3);width:60px;text-align:right">Entrata</span>
+        <span style="font-size:9px;color:var(--text3);width:60px;text-align:right">Size</span>
+        <span style="font-size:9px;color:var(--text3);width:65px;text-align:right">P&amp;L</span>
+        <span style="font-size:9px;color:var(--text3);width:55px;text-align:right">Stato</span>
+        <span style="font-size:9px;color:var(--text3);margin-left:auto">Copia</span>
+      </div>
+      <div class="trade-feed" id="tradeFeed"><!-- rows injected by JS --></div>
+    </div>
+
+    <!-- RIGHT: my portfolio + win-rate chart -->
+    <div>
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div class="ct" style="margin:0">🗂 Il mio portafoglio emulato</div>
+          <button onclick="closeAllPositions()" style="padding:3px 9px;background:rgba(255,61,90,.1);border:1px solid rgba(255,61,90,.3);border-radius:4px;color:var(--red);font-family:var(--mono);font-size:9px;cursor:pointer">CHIUDI TUTTO</button>
+        </div>
+        <div id="myPortfolio" style="min-height:80px">
+          <div style="padding:24px;text-align:center;font-size:11px;color:var(--text3)">Nessuna posizione — clicca COPIA su una trade del feed</div>
+        </div>
+        <div style="padding:10px 14px;border-top:1px solid var(--border);background:var(--bg3);display:flex;justify-content:space-between;font-size:10px">
+          <span style="color:var(--text3)">Posizioni chiuse:</span>
+          <span id="closed-count" style="color:var(--text2)">0</span>
+          <span style="color:var(--text3)">P&amp;L realizzato:</span>
+          <span id="realized-pnl" class="up">+$0.00</span>
+        </div>
+      </div>
+
+      <!-- closed trades log -->
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
+        <div style="padding:10px 16px;border-bottom:1px solid var(--border)"><div class="ct" style="margin:0">📋 Storico trade chiuse</div></div>
+        <div id="closedLog" style="max-height:150px;overflow-y:auto">
+          <div style="padding:16px;text-align:center;font-size:10px;color:var(--text3)">Nessuna trade chiusa ancora</div>
+        </div>
+      </div>
+
+      <!-- win rate chart -->
+      <div class="card">
+        <div class="ct">Win rate per whale — aggiornato live</div>
+        <div style="height:160px"><canvas id="c-wr-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD + SIGNAL MATRIX -->
+  <div class="g2">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border)"><div class="ct" style="margin:0">🏆 Leaderboard — Win Rate 90gg</div></div>
+      <div id="leaderboard"><!-- populated by JS --></div>
+    </div>
+    <div class="card">
+      <div class="ct">📡 Forza segnali correnti — Convergenza whale</div>
+      <div id="signalMatrix" style="margin-top:4px"><!-- populated by JS --></div>
+      <div style="font-size:9px;color:var(--text3);margin-top:10px;border-top:1px solid var(--border);padding-top:8px">Convergenza: quante whale diverse hanno la stessa posizione su un asset. Segnale più forte = più whale concordano.</div>
+    </div>
+  </div>
+
+</div>
+<!-- ════════ END EMULATOR ════════ -->
+
+<footer>
+  <span>ILT Market Intelligence v3 · Pine Script v6 companion · 13 Mar 2026</span>
+  <span>Fonti: ICI · BlackRock iShares · OPEC · USGS · IEA · WhaleStream · MarineTraffic · FXDailyReport</span>
+  <span style="color:var(--red)">⚠ Solo informativo — non è consulenza finanziaria</span>
+</footer>
+</div><!-- /wrap -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+// LIVE STATE
+// ═══════════════════════════════════════════════════════
+const STATE = {
+  sp500: 6632, ndx: 22105, vix: 27.38,
+  oil: 101.24, gold: 5107, silver: 83.10, wti: 95.40,
+  sp500_0: 6632, ndx_0: 22105, vix_0: 27.38,
+  oil_0: 101.24, gold_0: 5107, silver_0: 83.10,
+  priceHistory: {
+    oil:   [92.13, 94.8, 97.2, 99.82, 101.24],
+    gold:  [5289, 5230, 5182, 5140, 5107],
+    silver:[87.90, 86.20, 85.40, 84.10, 83.10]
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+// TICKER STRIP
+// ═══════════════════════════════════════════════════════
+const TICKERS = [
+  {name:'S&P 500',idVal:'t-sp500',idChg:'tc-sp500',key:'sp500'},
+  {name:'NASDAQ',idVal:'t-ndx',idChg:'tc-ndx',key:'ndx'},
+  {name:'VIX',idVal:'t-vix',idChg:'tc-vix',key:'vix'},
+  {name:'Brent Crude',idVal:'t-oil',idChg:'tc-oil',key:'oil'},
+  {name:'Gold',idVal:'t-gold',idChg:'tc-gold',key:'gold'},
+  {name:'Silver',idVal:'t-silver',idChg:'tc-silver',key:'silver'},
+  {name:'WTI',idVal:'t-wti',idChg:'tc-wti',key:'wti'},
+  {name:'DXY',idVal:'t-dxy',idChg:'tc-dxy',key:'dxy'},
+];
+function buildTicker(){
+  const base = TICKERS.map(t=>`<div class="tick-item"><span class="tick-name">${t.name}</span><span class="tick-val" id="${t.idVal}">—</span><span class="tick-chg" id="${t.idChg}"></span></div>`).join('');
+  document.getElementById('tickerInner').innerHTML = base + base;
+}
+buildTicker();
+
+// ═══════════════════════════════════════════════════════
+// CLOCK & COUNTDOWN
+// ═══════════════════════════════════════════════════════
+let countdown = 10;
+function updateClock(){
+  const now = new Date();
+  const s = now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('hclock').textContent = `13 Mar 2026 · ${s}`;
+}
+updateClock();
+setInterval(()=>{
+  countdown--;
+  document.getElementById('countdown').textContent = countdown;
+  if(countdown <= 0){ countdown=10; tickPrices(); }
+  updateClock();
+},1000);
+
+// ═══════════════════════════════════════════════════════
+// PRICE TICK ENGINE
+// ═══════════════════════════════════════════════════════
+function rand(min,max){ return Math.random()*(max-min)+min; }
+function fmtChg(v,v0,pfx='',dec=2){
+  const d=v-v0, p=d/v0*100;
+  const sym=d>=0?'▲':'▼';
+  return {str:`${sym} ${pfx}${Math.abs(d).toFixed(dec)} (${p>=0?'+':''}${p.toFixed(2)}%)`, cls:d>=0?'up':'dn'};
+}
+
+function tickPrices(){
+  // Micro random walks with realistic volatility
+  STATE.sp500  += rand(-18, 12);
+  STATE.ndx    += rand(-55, 40);
+  STATE.vix    += rand(-0.4, 0.6);
+  STATE.oil    += rand(-0.8, 1.4);
+  STATE.gold   += rand(-18, 12);
+  STATE.silver += rand(-0.5, 0.4);
+  STATE.wti    += rand(-0.7, 1.2);
+
+  STATE.vix    = Math.max(22, Math.min(35, STATE.vix));
+  STATE.oil    = Math.max(95, Math.min(115, STATE.oil));
+  STATE.gold   = Math.max(5000, Math.min(5300, STATE.gold));
+  STATE.silver = Math.max(79, Math.min(90, STATE.silver));
+
+  updateDisplay();
+  updatePriceHistory();
+  updateSparklines();
+}
+
+function flashEl(id, up){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.remove('flash-up','flash-dn');
+  void el.offsetWidth;
+  el.classList.add(up?'flash-up':'flash-dn');
+  setTimeout(()=>el.classList.remove('flash-up','flash-dn'),700);
+}
+
+function setKpiVal(elId, val, formatted, chgClass){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const prev = el.textContent;
+  el.textContent = formatted;
+  if(prev !== formatted) flashEl(elId.replace('v-','kpi-'), chgClass==='up');
+}
+
+function updateDisplay(){
+  const fmt = (v,d=2) => v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+  // KPI main values
+  document.getElementById('v-sp500').textContent = fmt(STATE.sp500,0);
+  document.getElementById('v-ndx').textContent   = fmt(STATE.ndx,0);
+  document.getElementById('v-vix').textContent   = fmt(STATE.vix);
+  document.getElementById('v-oil').textContent   = '$'+fmt(STATE.oil);
+  document.getElementById('v-gold').textContent  = '$'+fmt(STATE.gold,0);
+  document.getElementById('v-silver').textContent= '$'+fmt(STATE.silver);
+
+  // Changes
+  const cSp = fmtChg(STATE.sp500,STATE.sp500_0,'',0);
+  const cNd = fmtChg(STATE.ndx,STATE.ndx_0,'',0);
+  const cOi = fmtChg(STATE.oil,STATE.oil_0,'$');
+  const cGo = fmtChg(STATE.gold,STATE.gold_0,'$',0);
+  const cSi = fmtChg(STATE.silver,STATE.silver_0,'$');
+
+  document.getElementById('c-sp500').textContent = cSp.str; document.getElementById('c-sp500').className='ks '+cSp.cls;
+  document.getElementById('c-ndx').textContent   = cNd.str; document.getElementById('c-ndx').className='ks '+cNd.cls;
+  document.getElementById('c-oil').textContent   = cOi.str; document.getElementById('c-oil').className='ks '+cOi.cls;
+  document.getElementById('c-gold').textContent  = cGo.str; document.getElementById('c-gold').className='ks '+cGo.cls;
+  document.getElementById('c-silver').textContent= cSi.str; document.getElementById('c-silver').className='ks '+cSi.cls;
+
+  // Big price boards
+  document.getElementById('big-oil').textContent   = '$'+fmt(STATE.oil);
+  document.getElementById('big-gold').textContent  = '$'+fmt(STATE.gold,0);
+  document.getElementById('big-silver').textContent= '$'+fmt(STATE.silver);
+  document.getElementById('oil-24h').textContent   = cOi.str;
+  document.getElementById('gold-24h').textContent  = cGo.str;
+  document.getElementById('silver-24h').textContent= cSi.str;
+
+  // Ticker strip
+  const tv = (id,v,d=2) => { const el=document.getElementById(id); if(el) el.textContent=fmt(v,d); };
+  tv('t-sp500',STATE.sp500,0); tv('t-ndx',STATE.ndx,0); tv('t-vix',STATE.vix);
+  tv('t-oil',STATE.oil); tv('t-gold',STATE.gold,0); tv('t-silver',STATE.silver);
+  tv('t-wti',STATE.wti); 
+
+  const setChg=(id,v,v0)=>{
+    const el=document.getElementById(id); if(!el) return;
+    const d=v-v0,p=d/v0*100,u=d>=0;
+    el.textContent=(u?'▲':'▼')+' '+(p>=0?'+':'')+p.toFixed(2)+'%';
+    el.className='tick-chg '+(u?'up':'dn');
+  };
+  setChg('tc-sp500',STATE.sp500,STATE.sp500_0);
+  setChg('tc-ndx',STATE.ndx,STATE.ndx_0);
+  setChg('tc-oil',STATE.oil,STATE.oil_0);
+  setChg('tc-gold',STATE.gold,STATE.gold_0);
+  setChg('tc-silver',STATE.silver,STATE.silver_0);
+}
+updateDisplay();
+
+function updatePriceHistory(){
+  STATE.priceHistory.oil.push(parseFloat(STATE.oil.toFixed(2)));
+  STATE.priceHistory.gold.push(parseFloat(STATE.gold.toFixed(0)));
+  STATE.priceHistory.silver.push(parseFloat(STATE.silver.toFixed(2)));
+  if(STATE.priceHistory.oil.length > 30){ STATE.priceHistory.oil.shift(); STATE.priceHistory.gold.shift(); STATE.priceHistory.silver.shift(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART ENGINE
+// ═══════════════════════════════════════════════════════
+const DG='rgba(255,255,255,0.05)', DT='#334e5e';
+Chart.defaults.font.family="'Space Mono',monospace";
+Chart.defaults.font.size=10;
+Chart.defaults.color=DT;
+
+const charts = {};
+function mkLine(id,labels,ds,opts={}){
+  const c=document.getElementById(id);if(!c)return;
+  charts[id]=new Chart(c,{type:'line',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:opts.legend??false,labels:{boxWidth:8,font:{size:9}}}},scales:{x:{grid:{color:DG},ticks:{color:DT,maxTicksLimit:8}},y:{grid:{color:DG},ticks:{color:DT,maxTicksLimit:5},...(opts.y||{})}}}});
+}
+function mkBar(id,labels,ds,hz=false){
+  const c=document.getElementById(id);if(!c)return;
+  charts[id]=new Chart(c,{type:'bar',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,indexAxis:hz?'y':'x',plugins:{legend:{display:false}},scales:{x:{grid:{color:hz?'transparent':DG},ticks:{color:DT}},y:{grid:{color:hz?DG:'transparent'},ticks:{color:DT}}}}});
+}
+function mkDonut(id,labels,data,colors){
+  const c=document.getElementById(id);if(!c)return;
+  charts[id]=new Chart(c,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{display:true,position:'right',labels:{boxWidth:9,font:{size:9},color:DT}}}}});
+}
+
+// Sparkline charts (no axes)
+function mkSpark(id,data,color){
+  const c=document.getElementById(id);if(!c)return;
+  charts[id]=new Chart(c,{type:'line',data:{labels:data.map((_,i)=>i),datasets:[{data,borderColor:color,backgroundColor:color.replace(')',',0.15)').replace('rgb','rgba'),fill:true,tension:.4,pointRadius:0,borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
+}
+
+function updateSparklines(){
+  ['c-oil-spark','c-gold-spark','c-silver-spark'].forEach((id,i)=>{
+    const ch=charts[id]; if(!ch) return;
+    const k=['oil','gold','silver'][i];
+    ch.data.datasets[0].data=[...STATE.priceHistory[k]];
+    ch.update('none');
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// VESSEL MAP
+// ═══════════════════════════════════════════════════════
+// Coordinate helper: lon/lat → normalized 0-1 (simple Mercator approx)
+// lon: -180..180 → x: 0..1  |  lat: 85..-85 → y: 0..1
+function geo(lon,lat){ return { x:(lon+180)/360, y:(90-lat)/180 }; }
+
+const VESSELS = [
+  // Oil tankers (type 0) — in ocean, on real routes
+  {id:'VLCC-001',name:'Seaways Atlas',   type:0,...geo(72,20), dx:-.0006,dy:-.0001,cargo:'2M bbl Brent',   origin:'Ras Tanura (SA)',dest:'Rotterdam',  status:'NORMAL',  tons:'320,000 DWT'},
+  {id:'VLCC-002',name:'Suez Carrier',    type:0,...geo(40,18), dx:-.0005,dy:-.0002,cargo:'1.8M bbl Brent', origin:'Jubail (SA)',    dest:'Suez→Med',    status:'DEVIATA', tons:'280,000 DWT'},
+  {id:'VLCC-003',name:'NITC Endeavor',   type:0,...geo(57,26), dx: .0001,dy: .0001,cargo:'1.5M bbl',       origin:'Bandar Abbas(IR)',dest:'BLOCCATA',   status:'BLOCCATA',tons:'310,000 DWT'},
+  {id:'VLCC-004',name:'Nordic Hawk',     type:0,...geo(-38,42),dx: .0007,dy:-.0001,cargo:'1.2M bbl WTI',   origin:'Houston (US)',  dest:'Rotterdam',   status:'NORMAL',  tons:'260,000 DWT'},
+  {id:'VLCC-005',name:'Pacific Winner',  type:0,...geo(88,8),  dx: .0005,dy: .0001,cargo:'1.9M bbl',       origin:'Hormuz→Asia',   dest:'Singapore',   status:'NORMAL',  tons:'295,000 DWT'},
+  // Gold cargo (type 1) — air routes
+  {id:'GOLD-001',name:'Malca-Amit Air',  type:1,...geo(30,38), dx: .0010,dy: .0002,cargo:'4.2t Au fisico', origin:'Zurigo (CH)',   dest:'Singapore',   status:'VOLO',    tons:'B747F'},
+  {id:'GOLD-002',name:'Brinks-Trans',    type:1,...geo(-50,50),dx: .0009,dy:-.0001,cargo:'2.1t Au fisico', origin:'Toronto (CA)',  dest:'London Vault', status:'VOLO',   tons:'B777F'},
+  {id:'GOLD-003',name:'MV Safehaven',    type:1,...geo(68,15), dx: .0004,dy:-.0002,cargo:'8t Au barre',    origin:'Dubai (UAE)',   dest:'Hong Kong',   status:'NORMAL',  tons:'Secure vessel'},
+  // Silver cargo (type 2)
+  {id:'SILV-001',name:'MS Silverline',   type:2,...geo(-30,38),dx: .0005,dy:-.0001,cargo:'420t Ag bullion',origin:'Messico→EU',    dest:'Rotterdam',   status:'NORMAL',  tons:'22,000 DWT'},
+  {id:'SILV-002',name:'Fresnillo Export',type:2,...geo(-88,18),dx:-.0003,dy:-.0002,cargo:'280t Ag conc.',  origin:'Veracruz (MX)', dest:'Hamburg',     status:'NORMAL',  tons:'18,000 DWT'},
+];
+
+const CHOKEPOINTS = [
+  {...geo(56.5,26.5), name:'Stretto di Hormuz',    status:'BLOCCATO',    color:'#ff3d5a', radius:16},
+  {...geo(32.3,30.5), name:'Canale di Suez',        status:'RISCHIOSO',   color:'#f5a623', radius:11},
+  {...geo(103.8,1.2), name:'Stretto di Malacca',   status:'NORMALE',     color:'#334e5e', radius:9},
+  {...geo(-79.9,9.1), name:'Canale di Panama',     status:'NORMALE',     color:'#334e5e', radius:9},
+  {...geo(18.5,-34.4),name:'Capo Buona Speranza',  status:'CONGESTIONATO',color:'#f5a623', radius:11},
+  {...geo(-5.4,35.9), name:'Stretto di Gibilterra',status:'NORMALE',     color:'#334e5e', radius:8},
+];
+
+const MINES_MAP = [
+  {...geo(49.5,25.5), name:'Ghawar (SA)',     type:'oil',    color:'#ef6c00'},
+  {...geo(-102,32),   name:'Permian (US)',    type:'oil',    color:'#ef6c00'},
+  {...geo(64.5,40.8), name:'Muruntau (UZ)',   type:'gold',   color:'#ffd54f'},
+  {...geo(121,-30.8), name:'Super Pit (AU)',  type:'gold',   color:'#ffd54f'},
+  {...geo(-103,23),   name:'Fresnillo (MX)',  type:'silver', color:'#b0bec5'},
+  {...geo(-77,-9.5),  name:'Antamina (PE)',   type:'silver', color:'#b0bec5'},
+  {...geo(19.3,51.5), name:'KGHM (PL)',       type:'silver', color:'#b0bec5'},
+];
+
+let mapCanvas, mapCtx, animFrame;
+let hoveredVessel = null;
+
+function initMap(){
+  mapCanvas = document.getElementById('vesselMap');
+  if(!mapCanvas) return;
+  mapCtx = mapCanvas.getContext('2d');
+  // Set resolution
+  const dpr = window.devicePixelRatio||1;
+  const w = mapCanvas.parentElement.clientWidth;
+  mapCanvas.width = w * dpr;
+  mapCanvas.height = 380 * dpr;
+  mapCanvas.style.width = w+'px';
+  mapCanvas.style.height = '380px';
+  mapCtx.scale(dpr, dpr);
+  mapCanvas._w = w;
+  mapCanvas._h = 380;
+  drawMap();
+
+  mapCanvas.addEventListener('mousemove', (e)=>{
+    const rect=mapCanvas.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)/mapCanvas._w;
+    const my=(e.clientY-rect.top)/mapCanvas._h;
+    let found=null;
+    VESSELS.forEach(v=>{
+      const dx=Math.abs(v.x-mx), dy=Math.abs(v.y-my);
+      if(dx<0.025 && dy<0.025) found=v;
+    });
+    hoveredVessel=found;
+    const tt=document.getElementById('mapTooltip');
+    if(found){
+      tt.style.display='block';
+      tt.style.left=(e.clientX-rect.left+12)+'px';
+      tt.style.top=(e.clientY-rect.top-10)+'px';
+      const sc=found.status==='BLOCCATA'||found.status==='DEVIATA'?'color:var(--red)':'color:var(--accent)';
+      tt.innerHTML=`<strong style="color:#fff">${found.id}</strong><br>${found.name}<br><span style="${sc}">${found.status}</span><br>Cargo: ${found.cargo}<br>Origine: ${found.origin}<br>Dest: ${found.dest}<br>Stazza: ${found.tons}`;
+    } else { tt.style.display='none'; }
+  });
+  mapCanvas.addEventListener('mouseleave',()=>{ document.getElementById('mapTooltip').style.display='none'; hoveredVessel=null; });
+}
+
+function drawMap(){
+  if(!mapCtx) return;
+  const W=mapCanvas._w, H=mapCanvas._h;
+  const ctx=mapCtx;
+  ctx.clearRect(0,0,W,H);
+
+  // px(lon,lat) → canvas pixel
+  function px(lon,lat){ return [(lon+180)/360*W, (90-lat)/180*H]; }
+
+  // Draw a polygon from array of [lon,lat] pairs
+  function poly(pts, fill, stroke, lw=0.5){
+    ctx.beginPath();
+    ctx.moveTo(...px(...pts[0]));
+    for(let i=1;i<pts.length;i++) ctx.lineTo(...px(...pts[i]));
+    ctx.closePath();
+    if(fill){ ctx.fillStyle=fill; ctx.fill(); }
+    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke(); }
+  }
+
+  // ── OCEAN ──
+  ctx.fillStyle='#07121a';
+  ctx.fillRect(0,0,W,H);
+
+  // ── GRID (lat/lon lines) ──
+  ctx.strokeStyle='rgba(20,42,55,.9)'; ctx.lineWidth=.4;
+  for(let lon=-150;lon<=180;lon+=30){
+    ctx.beginPath(); ctx.moveTo(...px(lon,85)); ctx.lineTo(...px(lon,-85)); ctx.stroke();
+  }
+  for(let lat=60;lat>=-60;lat-=30){
+    ctx.beginPath(); ctx.moveTo(...px(-180,lat)); ctx.lineTo(...px(180,lat)); ctx.stroke();
+  }
+  // equator highlight
+  ctx.strokeStyle='rgba(30,60,75,.7)'; ctx.lineWidth=.6;
+  ctx.beginPath(); ctx.moveTo(...px(-180,0)); ctx.lineTo(...px(180,0)); ctx.stroke();
+
+  const LAND='#1a2e3b', LAND2='#1f3545', BORDER='rgba(40,80,100,.6)';
+
+  // ── NORTH AMERICA ──
+  poly([[-168,72],[-140,70],[-95,72],[-65,70],[-52,47],[-53,42],[-67,44],[-70,41],[-75,35],[-80,25],[-85,16],[-90,15],[-88,20],[-92,20],[-95,28],[-97,26],[-117,32],[-122,37],[-124,49],[-130,55],[-140,58],[-153,60],[-163,60],[-168,65]], LAND, BORDER);
+  // Greenland
+  poly([[-50,83],[-20,78],[-18,70],[-25,65],[-45,60],[-55,64],[-58,76],[-45,83]], LAND2, BORDER);
+
+  // ── SOUTH AMERICA ──
+  poly([[-78,12],[-62,12],[-50,5],[-35,-5],[-35,-12],[-40,-22],[-43,-23],[-50,-30],[-55,-35],[-65,-55],[-68,-54],[-72,-50],[-72,-40],[-73,-37],[-70,-18],[-75,-14],[-77,-8],[-80,-2],[-80,5],[-78,8]], LAND, BORDER);
+
+  // ── EUROPE ──
+  poly([[28,71],[30,70],[32,65],[28,60],[25,55],[18,57],[15,55],[8,55],[5,52],[-2,50],[-9,39],[-8,37],[-5,36],[5,43],[8,44],[15,38],[15,42],[18,40],[22,38],[26,38],[30,40],[34,42],[36,42],[40,42],[40,68],[28,71]], LAND2, BORDER);
+
+  // ── AFRICA ──
+  poly([[-6,35],[10,37],[15,38],[25,35],[33,31],[35,26],[37,20],[43,12],[50,12],[50,8],[44,4],[40,-2],[36,-8],[35,-18],[36,-25],[30,-32],[25,-34],[18,-34],[14,-28],[10,-22],[6,-12],[2,4],[-2,5],[-8,5],[-16,12],[-17,14],[-16,20],[-13,28],[-6,35]], LAND, BORDER);
+
+  // ── MIDDLE EAST ──
+  poly([[34,30],[35,33],[36,37],[40,38],[44,38],[46,39],[48,38],[50,30],[58,22],[59,23],[58,26],[57,26],[55,24],[53,24],[50,27],[45,28],[40,30],[37,22],[35,26],[34,30]], LAND2, BORDER);
+  // Arabia peninsula
+  poly([[37,28],[55,24],[58,22],[50,12],[44,12],[43,14],[40,18],[37,22],[37,28]], LAND2, BORDER);
+
+  // ── ASIA (main body) ──
+  poly([[40,42],[44,42],[50,44],[55,44],[60,46],[70,46],[80,44],[88,48],[90,50],[100,52],[110,53],[120,52],[130,52],[140,54],[150,60],[160,64],[170,65],[170,55],[155,50],[145,44],[140,38],[130,32],[122,30],[115,24],[110,20],[105,14],[104,2],[100,4],[98,6],[95,10],[88,22],[78,8],[70,22],[65,24],[62,26],[58,28],[58,36],[60,42],[55,44],[50,44],[44,42],[40,42]], LAND, BORDER);
+  // Kamchatka / NE Russia
+  poly([[160,64],[170,65],[180,64],[175,52],[160,52],[155,50],[160,54],[160,64]], LAND2, BORDER);
+  // Siberia North
+  poly([[40,68],[80,72],[120,72],[160,70],[170,65],[160,64],[150,60],[140,54],[130,52],[120,52],[110,53],[100,52],[90,50],[88,48],[80,44],[70,46],[60,46],[50,44],[44,42],[40,42],[40,68]], LAND, BORDER);
+
+  // ── INDIAN SUBCONTINENT ──
+  poly([[65,24],[68,24],[72,22],[77,8],[80,8],[80,14],[78,18],[76,22],[68,28],[65,24]], LAND2, BORDER);
+
+  // ── SE ASIA (peninsula + islands) ──
+  poly([[98,6],[100,4],[104,2],[103,1],[101,-1],[100,2],[98,6]], LAND2, BORDER);
+  // Borneo
+  poly([[108,7],[118,7],[117,2],[115,2],[108,4],[108,7]], LAND2, BORDER);
+  // Java (simplified)
+  poly([[105,-6],[115,-7],[111,-8],[106,-7],[105,-6]], LAND2, BORDER);
+
+  // ── AUSTRALIA ──
+  poly([[114,-22],[122,-20],[130,-14],[136,-12],[138,-15],[142,-10],[145,-14],[150,-22],[151,-34],[140,-36],[136,-36],[128,-34],[120,-34],[114,-30],[114,-22]], LAND, BORDER);
+  // Tasmania
+  poly([[144,-40],[148,-40],[148,-44],[144,-44],[144,-40]], LAND2, BORDER);
+
+  // ── JAPAN ──
+  poly([[131,31],[132,34],[130,34],[131,33],[131,31]], LAND2, BORDER);
+  poly([[136,35],[141,42],[144,44],[142,44],[136,40],[134,36],[136,35]], LAND2, BORDER);
+  // Hokkaido
+  poly([[141,42],[145,44],[145,46],[142,44],[141,42]], LAND2, BORDER);
+
+  // ── UK / IRELAND ──
+  poly([[-6,58],[-2,58],[-2,52],[-5,50],[-5,52],[-8,54],[-6,58]], LAND2, BORDER);
+  poly([[-8,55],[-6,55],[-6,52],[-10,52],[-8,55]], LAND2, BORDER);
+
+  // ── SHIPPING ROUTES (dashed bezier) ──
+  ctx.setLineDash([5,5]); ctx.lineWidth=.8;
+
+  function route(pts, color, alpha=.4){
+    ctx.strokeStyle=`rgba(${color},${alpha})`;
+    ctx.beginPath();
+    const [x0,y0]=px(...pts[0]);
+    ctx.moveTo(x0,y0);
+    if(pts.length===3){
+      ctx.quadraticCurveTo(...px(...pts[1]),...px(...pts[2]));
+    } else if(pts.length===4){
+      ctx.bezierCurveTo(...px(...pts[1]),...px(...pts[2]),...px(...pts[3]));
+    } else {
+      for(let i=1;i<pts.length;i++) ctx.lineTo(...px(...pts[i]));
+    }
+    ctx.stroke();
+  }
+
+  // Oil routes
+  route([[56,26],[40,20],[32,30],[0,38],[-5,36]], '239,108,0', .45);           // Hormuz→Suez→Mediterranean
+  route([[56,26],[60,15],[70,5],[80,-5],[18,-34],[0,38],[-5,36]], '239,108,0', .25); // Hormuz→Cape→Europe
+  route([[-95,28],[-60,38],[-20,38],[0,38],[4,52]], '239,108,0', .35);        // Houston→Rotterdam
+  route([[56,26],[80,14],[100,5],[103,1]], '239,108,0', .35);                 // Hormuz→Malacca→Singapore
+  // Gold air routes (lighter, more diagonal)
+  route([[8,47],[30,40],[60,28],[90,25],[103,1]], '255,213,79', .3);           // Zurich→Singapore (air)
+  route([[-79,43],[-40,52],[-10,50],[0,51]], '255,213,79', .25);              // Toronto→London (air)
+  // Silver sea routes
+  route([[-96,19],[-65,30],[-30,38],[4,52]], '176,190,197', .3);              // Mexico→Hamburg
+  route([[18,52],[8,52],[4,52],[-5,36],[18,-34]], '176,190,197', .2); // KGHM Poland → Cape route
+
+  ctx.setLineDash([]);
+
+  // ── CHOKEPOINTS ──
+  CHOKEPOINTS.forEach(cp=>{
+    const [cx,cy]=px(cp.x*360-180, 90-cp.y*180); // cp already has x/y from geo()
+    // Use raw x,y since they're already normalized
+    const cpx=cp.x*W, cpy=cp.y*H;
+    // Pulsing ring for active threats
+    if(cp.status!=='NORMALE'){
+      ctx.beginPath(); ctx.arc(cpx,cpy,cp.radius+4,0,Math.PI*2);
+      ctx.fillStyle=cp.color+'15'; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(cpx,cpy,cp.radius,0,Math.PI*2);
+    ctx.fillStyle=cp.color+'20'; ctx.fill();
+    ctx.strokeStyle=cp.color; ctx.lineWidth=1.2;
+    ctx.setLineDash(cp.status==='NORMALE'?[3,3]:[2,2]);
+    ctx.stroke(); ctx.setLineDash([]);
+    // Label — only for non-normal, with background pill
+    if(cp.status!=='NORMALE'){
+      const label=cp.name;
+      ctx.font='bold 9px Space Mono,monospace';
+      const tw=ctx.measureText(label).width;
+      const lx=cpx-tw/2-4, ly=cpy-cp.radius-18;
+      ctx.fillStyle='rgba(6,10,13,.82)';
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(lx,ly,tw+8,14,3) : ctx.rect(lx,ly,tw+8,14);
+      ctx.fill();
+      ctx.fillStyle=cp.color;
+      ctx.textAlign='center';
+      ctx.fillText(label,cpx,ly+11);
+    }
+  });
+
+  // ── MINES ──
+  MINES_MAP.forEach(m=>{
+    const [mx,my]=[m.x*W, m.y*H];
+    // Diamond shape
+    const s=5;
+    ctx.beginPath();
+    ctx.moveTo(mx, my-s); ctx.lineTo(mx+s, my); ctx.lineTo(mx, my+s); ctx.lineTo(mx-s, my);
+    ctx.closePath();
+    ctx.fillStyle=m.color+'99'; ctx.fill();
+    ctx.strokeStyle=m.color; ctx.lineWidth=1; ctx.stroke();
+    // Label with subtle background
+    ctx.font='8px Space Mono,monospace';
+    const tw=ctx.measureText(m.name).width;
+    ctx.fillStyle='rgba(6,10,13,.75)';
+    ctx.fillRect(mx-tw/2-2, my+7, tw+4, 11);
+    ctx.fillStyle=m.color+'ee';
+    ctx.textAlign='center';
+    ctx.fillText(m.name, mx, my+17);
+  });
+
+  // ── VESSELS ──
+  VESSELS.forEach(v=>{
+    const vx=v.x*W, vy=v.y*H;
+    const VCOL=['#ef6c00','#ffd54f','#b0bec5'];
+    const col=VCOL[v.type];
+    const isHov=hoveredVessel===v;
+    const isBlocked=v.status==='BLOCCATA';
+    const isAir=v.status==='VOLO';
+    const r=isHov?7:5;
+
+    if(isBlocked){
+      ctx.beginPath(); ctx.arc(vx,vy,r+6,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,61,90,.12)'; ctx.fill();
+    }
+
+    if(isAir){
+      // Airplane shape (small diamond + cross)
+      ctx.save();
+      ctx.translate(vx,vy);
+      ctx.fillStyle=col+'cc';
+      ctx.beginPath();
+      ctx.moveTo(0,-r); ctx.lineTo(r*.5,0); ctx.lineTo(0,r*.4); ctx.lineTo(-r*.5,0);
+      ctx.closePath(); ctx.fill();
+      if(isHov){ ctx.strokeStyle='#fff'; ctx.lineWidth=.8; ctx.stroke(); }
+      ctx.restore();
+    } else {
+      // Ship triangle
+      ctx.beginPath();
+      ctx.moveTo(vx, vy-r);
+      ctx.lineTo(vx+r*.75, vy+r*.6);
+      ctx.lineTo(vx-r*.75, vy+r*.6);
+      ctx.closePath();
+      ctx.fillStyle=isBlocked?'#ff3d5a':col;
+      ctx.fill();
+      if(isHov||isBlocked){ ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.stroke(); }
+    }
+
+    // Hover tooltip tag
+    if(isHov){
+      ctx.font='bold 9px Space Mono,monospace';
+      const lbl=`${v.id}`;
+      const tw=ctx.measureText(lbl).width+10;
+      ctx.fillStyle='rgba(6,10,13,.88)';
+      ctx.fillRect(vx-tw/2, vy-r-18, tw, 14);
+      ctx.fillStyle='#fff'; ctx.textAlign='center';
+      ctx.fillText(lbl, vx, vy-r-7);
+    }
+  });
+
+  // ── REGION LABELS ──
+  ctx.font='8px Space Mono,monospace'; ctx.textAlign='center';
+  [
+    ['NORTH AMERICA',-100,48,'#2a4a5e'],
+    ['SOUTH AMERICA',-58,-18,'#2a4a5e'],
+    ['EUROPE',15,54,'#2a4a5e'],
+    ['AFRICA',18,8,'#2a4a5e'],
+    ['MIDDLE EAST',46,28,'#2a4a5e'],
+    ['ASIA',90,42,'#2a4a5e'],
+    ['AUSTRALIA',134,-28,'#2a4a5e'],
+  ].forEach(([t,lon,lat,c])=>{
+    ctx.fillStyle=c;
+    const [x,y]=px(lon,lat);
+    ctx.fillText(t,x,y);
+  });
+}
+
+function animateMap(){
+  VESSELS.forEach(v=>{
+    if(v.status==='BLOCCATA') return; // blocked vessel stays put
+    v.x += v.dx * (0.8 + Math.random()*.4);
+    v.y += (v.dy||0) * (0.8 + Math.random()*.4);
+    // Wrap longitude
+    if(v.x > 1) v.x -= 1;
+    if(v.x < 0) v.x += 1;
+    // Clamp latitude to reasonable ocean bands (avoid poles)
+    if(v.y < 0.08) v.y = 0.08;
+    if(v.y > 0.88) v.y = 0.88;
+  });
+  drawMap();
+  animFrame = requestAnimationFrame(animateMap);
+}
+
+// ═══════════════════════════════════════════════════════
+// SECTION SWITCHER
+// ═══════════════════════════════════════════════════════
+function showSec(id, btn){
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  const s=document.getElementById('sec-'+id);
+  s.classList.add('active');
+  s.classList.remove('fi');void s.offsetWidth;s.classList.add('fi');
+  if(id==='commodities'){ setTimeout(()=>{ cancelAnimationFrame(animFrame); initMap(); animateMap(); },50); }
+}
+
+// ═══════════════════════════════════════════════════════
+// RANGE BARS
+// ═══════════════════════════════════════════════════════
+function range52(id,lo,hi,cur,col){
+  const p=((cur-lo)/(hi-lo)*100).toFixed(0);
+  document.getElementById(id).innerHTML=`<div style="font-size:10px;color:var(--text2);margin-bottom:7px">Ora <strong style="color:#fff">${cur.toLocaleString()}</strong> · ${p}% del range</div><div style="position:relative;height:7px;background:var(--bg3);border-radius:4px;border:1px solid var(--border);margin-bottom:5px"><div style="position:absolute;left:0;top:0;height:100%;width:${p}%;background:${col};border-radius:4px;opacity:.8"></div><div style="position:absolute;left:${p}%;top:-3px;width:2px;height:13px;background:#fff;border-radius:1px;transform:translateX(-50%)"></div></div><div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3)"><span>Min ${lo.toLocaleString()}</span><span>Max ${hi.toLocaleString()}</span></div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT CHARTS
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  range52('sp500-range',4835,7002,6632,'var(--red)');
+  range52('ndx-range',14784,24020,22105,'var(--blue)');
+
+  mkLine('c-perf7d',['5','6','7','10','11','12','13 Mar'],[
+    {label:'S&P 500',data:[6819,6792,6773,6750,6710,6673,6632],borderColor:'#ff3d5a',backgroundColor:'rgba(255,61,90,.08)',tension:.35,fill:true,pointRadius:2},
+    {label:'NASDAQ',data:[22800,22650,22490,22290,22150,22312,22105],borderColor:'#29b6f6',backgroundColor:'rgba(41,182,246,.08)',tension:.35,fill:true,pointRadius:2}
+  ],{legend:true});
+
+  mkLine('c-comm7d',['5','6','7','10','11','12','13 Mar'],[
+    {label:'Brent (÷50)',data:[1.80,1.85,1.89,1.90,1.96,2.01,2.02],borderColor:'#ef6c00',tension:.35,fill:false,pointRadius:2},
+    {label:'Gold (÷2500)',data:[2.12,2.10,2.08,2.05,2.05,2.04,2.04],borderColor:'#ffd54f',tension:.35,fill:false,pointRadius:2},
+    {label:'Silver (×1)',data:[87.9,86.2,85.4,84.1,83.3,83.1,83.1],borderColor:'#b0bec5',tension:.35,fill:false,pointRadius:2,yAxisID:'y2'}
+  ],{legend:true,extra:{scales:{x:{grid:{color:DG},ticks:{color:DT}},y:{grid:{color:DG},ticks:{color:DT}},y2:{position:'right',grid:{display:false},ticks:{color:DT}}}}});
+
+  mkSpark('c-oil-spark',  STATE.priceHistory.oil,  'rgb(239,108,0)');
+  mkSpark('c-gold-spark', STATE.priceHistory.gold, 'rgb(255,213,79)');
+  mkSpark('c-silver-spark',STATE.priceHistory.silver,'rgb(176,190,197)');
+
+  setTimeout(()=>{
+    mkBar('c-spy-vol',['4','5','6','7','10','11','12','13'],[
+      {label:'Vol B',data:[4.8,5.1,5.9,4.2,6.1,3.8,5.3,2.96],backgroundColor:(_,i)=>i===7?'rgba(255,61,90,.9)':'rgba(41,182,246,.55)',borderRadius:3},
+      {label:'Media',type:'line',data:[5.46,5.46,5.46,5.46,5.46,5.46,5.46,5.46],borderColor:'#f5a623',borderDash:[5,3],pointRadius:0,fill:false}
+    ]);
+    mkBar('c-qqq-vol',['4','5','6','7','10','11','12','13'],[
+      {label:'Vol B',data:[9.1,8.4,10.2,7.6,11.3,7.8,9.4,6.54],backgroundColor:(_,i)=>i===7?'rgba(255,61,90,.9)':'rgba(179,157,219,.55)',borderRadius:3},
+      {label:'Media',type:'line',data:[8.6,8.6,8.6,8.6,8.6,8.6,8.6,8.6],borderColor:'#f5a623',borderDash:[5,3],pointRadius:0,fill:false}
+    ]);
+    mkDonut('c-cat-flows',['Bond $31.5B','World eq $13.8B','Commodity $5.6B','Bond muni $2.7B','Dom.eq -$5.7B'],[31.5,13.77,5.62,2.67,5.74],['#29b6f6','#00e5a0','#f5a623','#b39ddb','#ff3d5a']);
+    mkBar('c-qqq-horiz',['5gg','1m','3m','6m','1a','3a','5a'],[{data:[2.9,-1.86,-5.88,9.17,9.25,53.5,76.68],backgroundColor:[2.9,-1.86,-5.88,9.17,9.25,53.5,76.68].map(v=>v>=0?'rgba(0,229,160,.8)':'rgba(255,61,90,.8)'),borderRadius:4}]);
+    mkLine('c-etf-mf',['2020','2021','2022','2023','2024','2025','2026E'],[
+      {label:'ETF cumul $T',data:[0,.8,1.5,2.4,3.7,5.2,6.1],borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,.08)',tension:.4,fill:true,pointRadius:3},
+      {label:'MF outflows $T',data:[0,-.4,-.9,-1.6,-2.5,-3.1,-3.6],borderColor:'#ff3d5a',backgroundColor:'rgba(255,61,90,.08)',tension:.4,fill:true,pointRadius:3}
+    ],{legend:true});
+    mkBar('c-whale-opt',['SPY $650P','QQQ $470P','NVDA $130C','AAPL $200P','OIH $300C','GLD $200C'],[{data:[85,62,340,44,180,95],backgroundColor:['#ff3d5a','#ff3d5a','#00e5a0','#ff3d5a','#ef6c00','#ffd54f'].map(c=>c+'cc'),borderRadius:4,label:'$M premium'}]);
+    mkBar('c-big3',['BlackRock','Vanguard','State Street'],[{data:[14.04,9.3,4.1],backgroundColor:['rgba(255,61,90,.85)','rgba(0,229,160,.85)','rgba(245,166,35,.85)'],borderRadius:6}]);
+    mkBar('c-comm-flows',['GLD ETF','SLV ETF','OIH ETF','USO ETF','GDX ETF','PDBC ETF'],[{data:[2.1,0.8,3.2,1.4,0.6,0.9],backgroundColor:['#ffd54f','#b0bec5','#ef6c00','#ef6c00cc','#ffd54fcc','#f5a623'].map(c=>c+'bb'),borderRadius:4}]);
+    mkLine('c-corr',['Feb 25','Mar 1','Mar 5','Mar 9','Mar 13'],[
+      {label:'Brent (norm)',data:[75,82,91,100,98],borderColor:'#ef6c00',tension:.4,pointRadius:3},
+      {label:'Gold (norm)',data:[103,102,99,97,96],borderColor:'#ffd54f',tension:.4,pointRadius:3},
+      {label:'DXY (norm)',data:[97,98,100,102,103],borderColor:'#29b6f6',tension:.4,pointRadius:3}
+    ],{legend:true});
+  },200);
+
+  // Init map on commodities tab visit
+  document.querySelector('.nb[onclick*="commodities"]').addEventListener('click',()=>{
+    setTimeout(()=>{ cancelAnimationFrame(animFrame); initMap(); animateMap(); },100);
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// WHALE EMULATOR ENGINE
+// ═══════════════════════════════════════════════════════
+const WHALE_PROFILES = [
+  { id:'BW', name:'Blackwater Capital', style:'Momentum / Macro',  color:'#ff3d5a',  emoji:'🐋', aum:'$42B', wins:78, losses:22, trades:312, pnl:+184.2, bias:'LONG',   focus:['NVDA','SPY','OIH','GLD'] },
+  { id:'QH', name:'QuantHorizon Fund',  style:'Quant / Systematic',color:'#29b6f6',  emoji:'🦈', aum:'$28B', wins:71, losses:29, trades:589, pnl:+97.6,  bias:'MIXED',  focus:['SPY','QQQ','AAPL','MSFT'] },
+  { id:'AM', name:'Atlas Macro',        style:'Global Macro / FX', color:'#ffd54f',  emoji:'🐳', aum:'$19B', wins:65, losses:35, trades:144, pnl:+61.3,  bias:'SHORT',  focus:['GLD','TLT','Brent','DXY'] },
+  { id:'NX', name:'Nexus Algorithmic',  style:'HFT / Arb',         color:'#b39ddb',  emoji:'🐬', aum:'$8B',  wins:83, losses:17, trades:1240,pnl:+44.8,  bias:'MIXED',  focus:['NVDA','META','AMZN','TSLA'] },
+  { id:'DW', name:'Deep Water Inv.',    style:'Value / Contrarian', color:'#00e5a0',  emoji:'🦭', aum:'$14B', wins:60, losses:40, trades:88,  pnl:+32.1,  bias:'LONG',   focus:['XOM','CVX','GLD','SLV'] },
+  { id:'ST', name:'Stormlight Macro',   style:'Options / Vol',     color:'#f5a623',  emoji:'🦑', aum:'$6B',  wins:69, losses:31, trades:203, pnl:+28.7,  bias:'SHORT',  focus:['VXX','SPY put','QQQ put','UVXY'] },
+];
+
+const TRADE_ASSETS = [
+  { sym:'NVDA',  basePrice:()=>820+rand(-8,8),    vol:.015, type:'equity' },
+  { sym:'SPY',   basePrice:()=>STATE.sp500/10,     vol:.008, type:'equity' },
+  { sym:'QQQ',   basePrice:()=>STATE.ndx/100*4.7,  vol:.010, type:'equity' },
+  { sym:'GLD',   basePrice:()=>STATE.gold/10,       vol:.012, type:'commodity' },
+  { sym:'SLV',   basePrice:()=>STATE.silver*0.9,    vol:.018, type:'commodity' },
+  { sym:'Brent', basePrice:()=>STATE.oil,           vol:.014, type:'commodity' },
+  { sym:'AAPL',  basePrice:()=>192+rand(-3,3),      vol:.009, type:'equity' },
+  { sym:'MSFT',  basePrice:()=>388+rand(-4,4),      vol:.008, type:'equity' },
+  { sym:'TSLA',  basePrice:()=>248+rand(-6,6),      vol:.025, type:'equity' },
+  { sym:'TLT',   basePrice:()=>88+rand(-1,1),       vol:.007, type:'bond' },
+  { sym:'OIH',   basePrice:()=>295+rand(-5,5),      vol:.016, type:'sector' },
+  { sym:'XOM',   basePrice:()=>108+rand(-2,2),      vol:.011, type:'equity' },
+  { sym:'META',  basePrice:()=>512+rand(-7,7),      vol:.013, type:'equity' },
+  { sym:'VXX',   basePrice:()=>STATE.vix*0.9+rand(-.5,.5), vol:.035, type:'volatility' },
+];
+
+// Live trade objects
+let ALL_TRADES = [];      // all whale trades
+let MY_PORTFOLIO = [];    // trades user has copied
+let CLOSED_TRADES = [];   // closed positions
+let FOLLOWING = new Set();// whale IDs being followed
+let wrChart = null;
+let tradeIdCounter = 1000;
+let realizedPnl = 0;
+
+function randomWhale(){ return WHALE_PROFILES[Math.floor(Math.random()*WHALE_PROFILES.length)]; }
+function randomAsset(){ return TRADE_ASSETS[Math.floor(Math.random()*TRADE_ASSETS.length)]; }
+function randDir(whale){ 
+  if(whale.bias==='LONG') return Math.random()<.75?'LONG':'SHORT';
+  if(whale.bias==='SHORT') return Math.random()<.75?'SHORT':'LONG';
+  return Math.random()<.5?'LONG':'SHORT';
+}
+function now_str(){
+  const d=new Date();
+  return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+function fmtMoney(v,d=2){ return (v>=0?'+':'')+v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+function generateTrade(){
+  const whale = randomWhale();
+  const asset = randomAsset();
+  const dir   = randDir(whale);
+  const entry = asset.basePrice();
+  const size  = Math.round(rand(0.5,8.0)*10)/10;  // $M
+  const id    = tradeIdCounter++;
+  return { id, whale, asset, dir, entry, size,
+    current: entry, pnl: 0, pnlPct: 0,
+    status: 'OPEN', time: now_str(),
+    isMyCopy: false, myEntry: 0,
+    ttl: Math.floor(rand(3,18)) // ticks before possible close
+  };
+}
+
+// Seed initial trades
+function seedTrades(){
+  for(let i=0;i<16;i++){
+    const t = generateTrade();
+    t.time = `${String(Math.floor(rand(14,21))).padStart(2,'0')}:${String(Math.floor(rand(0,59))).padStart(2,'0')}`;
+    t.current = t.entry * (1 + rand(-0.02, 0.03));
+    t.pnl = (t.current - t.entry) / t.entry * t.size * 1e6 / 1e3; // in $K shown as $M
+    t.pnl = parseFloat((t.pnl * (t.dir==='SHORT'?-1:1)).toFixed(2));
+    t.pnlPct = ((t.current - t.entry)/t.entry*100*(t.dir==='SHORT'?-1:1));
+    t.ttl = Math.floor(rand(2,12));
+    ALL_TRADES.unshift(t);
+  }
+}
+
+// Tick: update existing + maybe add new + maybe close some
+function tickEmulator(){
+  const now = now_str();
+
+  // Update current prices + PnL of open trades
+  ALL_TRADES.forEach(t=>{
+    if(t.status !== 'OPEN') return;
+    t.ttl--;
+    const move = t.asset.vol * rand(-1.5, 1.5);
+    t.current = t.current * (1 + move);
+    const raw = (t.current - t.entry) / t.entry;
+    t.pnl = parseFloat((raw * t.size * (t.dir==='SHORT'?-1:1) * 100).toFixed(2)); // $K
+    t.pnlPct = parseFloat((raw * 100 * (t.dir==='SHORT'?-1:1)).toFixed(2));
+
+    // Update my copy PnL
+    if(t.isMyCopy){
+      const myRaw = (t.current - t.myEntry) / t.myEntry;
+      t.myPnl = parseFloat((myRaw * t.size * (t.dir==='SHORT'?-1:1) * 100).toFixed(2));
+      t.myPnlPct = parseFloat((myRaw * 100 * (t.dir==='SHORT'?-1:1)).toFixed(2));
+    }
+
+    // Close trade if ttl expired (simulate whale exit)
+    if(t.ttl <= 0){
+      // Whale win rate influences outcome
+      const winProb = t.whale.wins / 100;
+      const isWin = Math.random() < winProb;
+      if(isWin && t.pnl < 0) t.pnl = Math.abs(t.pnl) * rand(0.5,1.5);
+      if(!isWin && t.pnl > 0) t.pnl = -Math.abs(t.pnl) * rand(0.3,1.2);
+      t.status = isWin ? 'WIN' : 'LOSS';
+      t.closeTime = now;
+
+      // If I was copying this
+      if(t.isMyCopy){
+        realizedPnl += (t.myPnl || t.pnl * 0.1);
+        CLOSED_TRADES.unshift({...t, finalPnl: t.myPnl || t.pnl * 0.1});
+        MY_PORTFOLIO = MY_PORTFOLIO.filter(p => p.id !== t.id);
+      }
+
+      // Update whale stats
+      if(isWin) t.whale.wins = Math.min(95, t.whale.wins + 0.1);
+      else       t.whale.losses = Math.min(95, t.whale.losses + 0.1);
+    }
+  });
+
+  // Add new trade with 40% probability each tick
+  if(Math.random() < 0.40){
+    const nt = generateTrade();
+    ALL_TRADES.unshift(nt);
+    // Auto-follow: if user follows this whale, auto-add to portfolio
+    if(FOLLOWING.has(nt.whale.id)){
+      nt.isMyCopy = true;
+      nt.myEntry = nt.entry;
+      nt.myPnl = 0;
+      nt.myPnlPct = 0;
+      MY_PORTFOLIO.unshift(nt);
+    }
+  }
+
+  // Keep feed capped
+  if(ALL_TRADES.length > 80) ALL_TRADES = ALL_TRADES.slice(0,80);
+  if(CLOSED_TRADES.length > 30) CLOSED_TRADES = CLOSED_TRADES.slice(0,30);
+
+  renderEmulator();
+}
+
+function copyTrade(tradeId){
+  const t = ALL_TRADES.find(x=>x.id===tradeId);
+  if(!t || t.status!=='OPEN' || t.isMyCopy) return;
+  t.isMyCopy = true;
+  t.myEntry  = t.current;
+  t.myPnl    = 0;
+  t.myPnlPct = 0;
+  MY_PORTFOLIO.unshift(t);
+  renderEmulator();
+}
+
+function closePosition(tradeId){
+  const t = ALL_TRADES.find(x=>x.id===tradeId);
+  if(!t) return;
+  t.isMyCopy = false;
+  const closed = MY_PORTFOLIO.findIndex(x=>x.id===tradeId);
+  if(closed !== -1){
+    const ct = MY_PORTFOLIO[closed];
+    realizedPnl += (ct.myPnl || 0);
+    CLOSED_TRADES.unshift({...ct, finalPnl: ct.myPnl || 0, closeTime: now_str(), status: ct.myPnl >= 0 ? 'WIN':'LOSS'});
+    MY_PORTFOLIO.splice(closed,1);
+  }
+  renderEmulator();
+}
+
+function closeAllPositions(){
+  [...MY_PORTFOLIO].forEach(t=>closePosition(t.id));
+}
+
+function toggleFollow(whaleId, btn){
+  if(FOLLOWING.has(whaleId)){
+    FOLLOWING.delete(whaleId);
+    btn.textContent = 'Copia segnali';
+    btn.classList.remove('active');
+    // Un-copy open positions of this whale
+    MY_PORTFOLIO = MY_PORTFOLIO.filter(p=>{
+      if(p.whale.id===whaleId){ p.isMyCopy=false; return false; }
+      return true;
+    });
+  } else {
+    FOLLOWING.add(whaleId);
+    btn.textContent = '✓ Seguendo';
+    btn.classList.add('active');
+  }
+  renderEmulator();
+}
+
+function renderEmulator(){
+  const openTrades = ALL_TRADES.filter(t=>t.status==='OPEN');
+
+  // ── KPI updates ──
+  const avgWR = (WHALE_PROFILES.reduce((a,w)=>a+w.wins,0)/WHALE_PROFILES.length).toFixed(1);
+  document.getElementById('emu-avg-wr').textContent = avgWR+'%';
+  document.getElementById('emu-open-pos').textContent = openTrades.length;
+  document.getElementById('feed-count').textContent = ALL_TRADES.length;
+
+  // My PnL
+  const unrealized = MY_PORTFOLIO.reduce((a,t)=>(a+(t.myPnl||0)),0);
+  const totalPnl = realizedPnl + unrealized;
+  const pnlEl = document.getElementById('emu-my-pnl');
+  const prevPnl = parseFloat(pnlEl.dataset.prev||0);
+  pnlEl.textContent = fmtMoney(totalPnl)+'K';
+  pnlEl.className = 'pnl-counter '+(totalPnl>=0?'up':'dn');
+  pnlEl.dataset.prev = totalPnl;
+  if(Math.abs(totalPnl - prevPnl) > 0.01){
+    pnlEl.style.animation='none'; void pnlEl.offsetWidth;
+    pnlEl.style.animation = totalPnl>prevPnl ? 'priceUp .6s ease' : 'priceDn .6s ease';
+  }
+  document.getElementById('emu-my-pnl-pct').textContent = MY_PORTFOLIO.length+' pos. aperte · Real: '+fmtMoney(realizedPnl)+'K';
+  document.getElementById('kpi-my-pnl').className = 'kpi '+(totalPnl>=0?'c-green':'c-red');
+
+  // Top signal
+  const topW = [...WHALE_PROFILES].sort((a,b)=>b.wins-a.wins)[0];
+  const topAssetTrades = openTrades.filter(t=>t.whale.id===topW.id);
+  if(topAssetTrades.length){
+    const ta = topAssetTrades[0];
+    document.getElementById('emu-top-signal').textContent = ta.asset.sym+' '+ta.dir;
+    document.getElementById('emu-top-signal-wr').textContent = topW.name+' — '+topW.wins.toFixed(0)+'% WR';
+  }
+
+  // ── Whale profiles ──
+  const grid = document.getElementById('whaleProfileGrid');
+  grid.innerHTML = WHALE_PROFILES.map(w=>{
+    const wt = ALL_TRADES.filter(t=>t.whale.id===w.id && t.status==='OPEN');
+    const wr = w.wins.toFixed(1);
+    const wrColor = w.wins>=75?'var(--accent)':w.wins>=65?'var(--amber)':'var(--red)';
+    const isFollowing = FOLLOWING.has(w.id);
+    const myPnlFromW = MY_PORTFOLIO.filter(p=>p.whale.id===w.id).reduce((a,t)=>a+(t.myPnl||0),0);
+    return `<div class="we-card ${isFollowing?'selected':''}">
+      <div class="we-head">
+        <div>
+          <div class="we-name">${w.emoji} ${w.name}</div>
+          <div class="we-style">${w.style}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--sans);font-weight:800;font-size:20px;color:${wrColor}">${wr}%</div>
+          <div style="font-size:9px;color:var(--text3)">win rate</div>
+        </div>
+      </div>
+      <div class="we-body">
+        <div style="font-size:9px;color:var(--text3);margin-bottom:3px">Win rate — 90 giorni</div>
+        <div class="wr-track"><div class="wr-fill" style="width:${wr}%;background:${wrColor}"></div></div>
+        <div class="wr-label"><span>${w.losses.toFixed(0)}% loss</span><span>${wr}% win</span></div>
+        <div class="we-stats">
+          <div class="we-stat"><div class="we-stat-v">${w.aum}</div><div class="we-stat-l">AUM</div></div>
+          <div class="we-stat"><div class="we-stat-v">${wt.length}</div><div class="we-stat-l">Open</div></div>
+          <div class="we-stat"><div class="we-stat-v" style="color:${myPnlFromW>=0?'var(--accent)':'var(--red)'};font-size:11px">${fmtMoney(myPnlFromW,1)}K</div><div class="we-stat-l">Mio P&L</div></div>
+        </div>
+        <button class="copy-btn ${isFollowing?'active':''}" onclick="toggleFollow('${w.id}',this)">${isFollowing?'✓ Seguendo':'Copia segnali'}</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── Trade feed ──
+  const feed = document.getElementById('tradeFeed');
+  const rows = ALL_TRADES.slice(0,40).map(t=>{
+    const pnlCls = t.pnl>=0?'up':'dn';
+    const statusBadge = t.status==='OPEN'
+      ? `<span class="b b-b" style="font-size:8px">OPEN</span>`
+      : t.status==='WIN'
+        ? `<span class="b b-g" style="font-size:8px">WIN</span>`
+        : `<span class="b b-r" style="font-size:8px">LOSS</span>`;
+    const dirBadge = t.dir==='LONG'
+      ? `<span class="b b-g" style="font-size:8px">▲ L</span>`
+      : `<span class="b b-r" style="font-size:8px">▼ S</span>`;
+    const copyBtn = t.status==='OPEN' && !t.isMyCopy
+      ? `<button class="copy-mini" onclick="copyTrade(${t.id})">COPIA</button>`
+      : t.isMyCopy
+        ? `<button class="copy-mini done" disabled>✓</button>`
+        : '';
+    return `<div class="tf-row ${t.isMyCopy?'my-copy':''} ${t.status==='OPEN'&&(ALL_TRADES.indexOf(t)===0)?'new-trade':''}">
+      <span class="tf-time">${t.time}</span>
+      <span class="tf-whale" style="color:${t.whale.color}">${t.whale.emoji} ${t.whale.id}</span>
+      <span class="tf-asset">${t.asset.sym}</span>
+      <span class="tf-dir">${dirBadge}</span>
+      <span class="tf-entry">$${t.entry.toFixed(t.entry>100?1:2)}</span>
+      <span class="tf-size">$${t.size.toFixed(1)}M</span>
+      <span class="tf-pnl ${pnlCls}">${fmtMoney(t.pnl,1)}K</span>
+      <span class="tf-status">${statusBadge}</span>
+      <span class="tf-copy">${copyBtn}</span>
+    </div>`;
+  }).join('');
+  feed.innerHTML = rows;
+
+  // ── My portfolio ──
+  const pf = document.getElementById('myPortfolio');
+  if(MY_PORTFOLIO.length === 0){
+    pf.innerHTML = '<div style="padding:24px;text-align:center;font-size:11px;color:var(--text3)">Nessuna posizione aperta</div>';
+  } else {
+    pf.innerHTML = MY_PORTFOLIO.map(t=>{
+      const mp = t.myPnl||0, mpp = t.myPnlPct||0;
+      const cls = mp>=0?'up':'dn';
+      return `<div class="my-pf-row">
+        <span class="pf-asset">${t.asset.sym}</span>
+        <span class="pf-dir">${t.dir==='LONG'?'<span class="b b-g" style="font-size:8px">▲ L</span>':'<span class="b b-r" style="font-size:8px">▼ S</span>'}</span>
+        <span class="pf-entry" title="Entry">$${t.myEntry.toFixed(t.myEntry>100?1:2)}</span>
+        <span class="pf-current ${t.current>t.myEntry?'up':'dn'}">$${t.current.toFixed(t.current>100?1:2)}</span>
+        <span class="pf-pnl ${cls}">${fmtMoney(mp,1)}K <span class="pf-pnlpct">(${mpp>=0?'+':''}${mpp.toFixed(2)}%)</span></span>
+        <span class="pf-whale">${t.whale.emoji} ${t.whale.name}</span>
+        <button class="pf-close" onclick="closePosition(${t.id})">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Realized + closed count
+  document.getElementById('closed-count').textContent = CLOSED_TRADES.length;
+  document.getElementById('realized-pnl').textContent = fmtMoney(realizedPnl,1)+'K';
+  document.getElementById('realized-pnl').className = realizedPnl>=0?'up':'dn';
+
+  // ── Closed log ──
+  const cl = document.getElementById('closedLog');
+  if(CLOSED_TRADES.length === 0){
+    cl.innerHTML = '<div style="padding:16px;text-align:center;font-size:10px;color:var(--text3)">Nessuna trade chiusa ancora</div>';
+  } else {
+    cl.innerHTML = CLOSED_TRADES.slice(0,20).map(t=>{
+      const fp = t.finalPnl||0;
+      const cls = fp>=0?'up':'dn';
+      return `<div class="closed-row">
+        <span style="color:${t.whale.color};width:25px">${t.whale.emoji}</span>
+        <span style="width:55px;font-weight:700;color:#fff">${t.asset.sym}</span>
+        <span style="width:35px">${t.dir==='LONG'?'<span class="b b-g" style="font-size:8px">L</span>':'<span class="b b-r" style="font-size:8px">S</span>'}</span>
+        <span style="flex:1;color:var(--text3)">${t.closeTime||t.time}</span>
+        <span class="${cls}" style="font-weight:700;width:70px;text-align:right">${fmtMoney(fp,1)}K</span>
+        <span style="width:40px;text-align:right">${t.status==='WIN'?'<span class="b b-g" style="font-size:8px">WIN</span>':'<span class="b b-r" style="font-size:8px">LOSS</span>'}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Leaderboard ──
+  const sorted = [...WHALE_PROFILES].sort((a,b)=>b.wins-a.wins);
+  const rankColors = ['gold-rank','silver-rank','bronze-rank'];
+  const lb = document.getElementById('leaderboard');
+  lb.innerHTML = sorted.map((w,i)=>{
+    const wr = w.wins.toFixed(1);
+    const wrColor = w.wins>=75?'var(--accent)':w.wins>=65?'var(--amber)':'var(--red)';
+    return `<div class="leaderboard-row">
+      <div class="lb-rank ${rankColors[i]||''}">${i+1}</div>
+      <div style="flex:1">
+        <div class="lb-name">${w.emoji} ${w.name}</div>
+        <div style="font-size:9px;color:var(--text3)">${w.style} · ${w.aum}</div>
+      </div>
+      <div class="lb-wr">
+        <div style="font-family:var(--sans);font-weight:700;font-size:15px;color:${wrColor}">${wr}%</div>
+        <div class="wr-track" style="margin-top:3px"><div class="wr-fill" style="width:${wr}%;background:${wrColor}"></div></div>
+      </div>
+      <div class="lb-trades" style="color:var(--text3)">${w.trades} trade</div>
+      <div class="lb-pnl ${w.pnl>=0?'up':'dn'}">${fmtMoney(w.pnl,1)}M</div>
+    </div>`;
+  }).join('');
+
+  // ── Signal matrix (convergence) ──
+  const assetSignals = {};
+  openTrades.forEach(t=>{
+    if(!assetSignals[t.asset.sym]) assetSignals[t.asset.sym]={long:0,short:0,whales:[]};
+    if(t.dir==='LONG') assetSignals[t.asset.sym].long++;
+    else assetSignals[t.asset.sym].short++;
+    if(!assetSignals[t.asset.sym].whales.includes(t.whale.id))
+      assetSignals[t.asset.sym].whales.push(t.whale.id);
+  });
+  const sorted_assets = Object.entries(assetSignals)
+    .sort((a,b)=>(b[1].long+b[1].short)-(a[1].long+a[1].short))
+    .slice(0,10);
+
+  const sm = document.getElementById('signalMatrix');
+  sm.innerHTML = sorted_assets.map(([sym,sig])=>{
+    const total = sig.long + sig.short;
+    const longPct = total>0?(sig.long/total*100).toFixed(0):50;
+    const dominant = sig.long >= sig.short ? 'LONG' : 'SHORT';
+    const domColor = dominant==='LONG'?'var(--accent)':'var(--red)';
+    const convergence = sig.whales.length;
+    const strength = Math.min(100, convergence * 20 + total * 8);
+    return `<div class="signal-row">
+      <span class="signal-label"><strong style="color:#fff">${sym}</strong> <span style="color:${domColor};font-size:9px">${dominant}</span></span>
+      <div class="signal-track">
+        <div class="signal-fill" style="width:${strength}%;background:linear-gradient(90deg,${domColor},${domColor}88)"></div>
+      </div>
+      <span style="width:35px;text-align:right;font-size:9px;font-weight:700;color:${domColor}">${strength.toFixed(0)}%</span>
+      <span style="width:60px;text-align:right;font-size:9px;color:var(--text3)">${convergence} whale${convergence>1?'s':''}</span>
+    </div>`;
+  }).join('');
+
+  // ── Win rate chart update ──
+  if(wrChart){
+    wrChart.data.datasets.forEach((ds,i)=>{
+      const w = WHALE_PROFILES[i];
+      if(w){ ds.data.push(parseFloat(w.wins.toFixed(1))); if(ds.data.length>20) ds.data.shift(); }
+    });
+    wrChart.data.labels.push(now_str()); if(wrChart.data.labels.length>20) wrChart.data.labels.shift();
+    wrChart.update('none');
+  }
+}
+
+function initWrChart(){
+  const c = document.getElementById('c-wr-chart'); if(!c) return;
+  const labels = Array.from({length:10},(_,i)=>'');
+  wrChart = new Chart(c,{
+    type:'line',
+    data:{
+      labels,
+      datasets: WHALE_PROFILES.map(w=>({
+        label: w.emoji+' '+w.id,
+        data: Array.from({length:10},()=>w.wins+rand(-1,1)),
+        borderColor: w.color,
+        backgroundColor: w.color+'22',
+        tension:.4, fill:false, pointRadius:1, borderWidth:1.5
+      }))
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{boxWidth:8,font:{size:9},color:DT}}},
+      scales:{
+        x:{display:false},
+        y:{min:50,max:95,grid:{color:DG},ticks:{color:DT,font:{size:9}}}
+      },
+      animation:{duration:0}
+    }
+  });
+}
+
+// Hook into existing 10s ticker
+const _origTickPrices = tickPrices;
+tickPrices = function(){
+  _origTickPrices();
+  tickEmulator();
+};
+
+// Init emulator when tab is opened
+document.querySelector('.nb[onclick*="emulator"]').addEventListener('click',()=>{
+  if(ALL_TRADES.length === 0){
+    seedTrades();
+    renderEmulator();
+    setTimeout(initWrChart, 100);
+  }
+});
+
+</script>
+</body>
+</html>
